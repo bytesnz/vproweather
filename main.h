@@ -29,6 +29,12 @@
 #define LOBYTE(w)   ((uint8_t)(w))
 #define HIBYTE(w)   ((uint8_t)(((uint16_t)(w) >> (uint8_t)8) & 0xff))
 
+#define CR 0x0d
+#define LF 0x0a
+#define ACK 0x06
+#define NAK 0x21
+#define CANCEL 0x18
+
 #ifndef PACKED
 #define PACKED __attribute__ ((__packed__))
 #endif // PACKED

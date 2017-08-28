@@ -49,6 +49,7 @@ static bool bModel;                     /* model name/number */
 static bool bGetRTD;                    /* Get Real Time Data */
 static bool bGetHLD;                    /* Get High Low Data */
 static bool bGetGD;                     /* Get graph data */
+static bool bGetInterval;               /* Get arcive interval */
 static bool bGetTime;                   /* Get time flag */
 static bool bSetTime;                   /* Set time flag */
 static bool bHTML;                      /* html substitution flag */
@@ -90,6 +91,7 @@ int main(int argc, char *argv[])
         printf(" -x, --get-realtime    Get real time weather data.\n");
         printf(" -l, --get-highlow     Get Highs/Lows data.\n");
         printf(" -g, --get-graph       Get graph data.\n");
+        printf(" -i, --get-interval    Get the current archive interval\n");
         printf(" -t, --get-time        Get weather station time.\n");
         printf(" -s, --set-time        Set weather station time to system time.\n");
         printf(" -o, --bklite-on       Turn backlite on.\n");
@@ -238,6 +240,15 @@ int main(int argc, char *argv[])
     }
 
 
+    /* Get weather station archive interval */
+    if (bGetInterval) {
+        if (runCommand("EEBRD 2D 01\n", 3, "archive interval")) {
+          exit(2);
+        }
+
+        printf("archiveInterval=%d\n", (uint8_t)szSerBuffer[1]);
+    }
+
     /* Get weather station time */
     if(bGetTime) {
         if (runCommand("GETTIME\n", 8, "time")) {
@@ -260,7 +271,7 @@ int main(int argc, char *argv[])
             exit(2);
         }
         ReadNextChar(fdser, &ch);           /* get ACK */
-        if(ch != 0x06) {
+        if(ch != ACK) {
             fprintf(stderr, "vproweather: Failed to get ACK.\n");
             exit(2);
         }
@@ -368,6 +379,7 @@ int GetParms(int argc, char *argv[])
         { "get-realtime",   no_argument,    0,  'x' },
         { "get-hilo",       no_argument,    0,  'l' },
         { "get-graph",      no_argument,    0,  'g' },
+        { "get-interval",   no_argument,    0,  'i' },
         { "get-time",       no_argument,    0,  't' },
         { "set-time",       no_argument,    0,  's' },
         { "verbose",        no_argument,    0,  'v' },
@@ -388,6 +400,7 @@ int GetParms(int argc, char *argv[])
     bGetGD = false;
     bHTML = false;
     bVerbose = false;
+    bGetInterval = false;
     bGetTime = false;
     bSetTime = false;
     yDelay = 10;
@@ -395,18 +408,19 @@ int GetParms(int argc, char *argv[])
     if(argc == 1)
         return 0;               /* no parms at all */
 
-    while ((c = getopt_long(argc, argv, "ofrmxlgvtsb:d:", longopts, NULL )) != EOF) {
+    while ((c = getopt_long(argc, argv, "ofrmxlgivtsb:d:", longopts, NULL )) != EOF) {
         switch (c) {
-            case 'o': bBKLOn  = true; break;
-            case 'f': bBKLOff = true; break;
-            case 'r': bVer    = true; break;
-            case 'm': bModel  = true; break;
-            case 'x': bGetRTD = true; break;
-            case 'l': bGetHLD = true; break;
-            case 'g': bGetGD  = true; break;
-            case 'v': bVerbose= true; break;
-            case 't': bGetTime= true; break;
-            case 's': bSetTime= true; break;
+            case 'o': bBKLOn        = true; break;
+            case 'f': bBKLOff       = true; break;
+            case 'r': bVer          = true; break;
+            case 'm': bModel        = true; break;
+            case 'x': bGetRTD       = true; break;
+            case 'l': bGetHLD       = true; break;
+            case 'g': bGetGD        = true; break;
+            case 'i': bGetInterval  = true; break;
+            case 'v': bVerbose      = true; break;
+            case 't': bGetTime      = true; break;
+            case 's': bSetTime      = true; break;
 
             case 'd':
                 /* Get delay time */
@@ -553,6 +567,15 @@ int runCommand(char* command, int expectedLength, char* dataLabel)
     }
     tcdrain(fdser);
     nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
+
+    /* Check received an ACK */
+    if (szSerBuffer[0] != ACK) {
+      printf("Didn't get ACK from weather station\n");
+      return -1;
+    } else if (bVerbose) {
+      printf("Get ACK reply to command\n");
+    }
+
     if(bVerbose) {
         printf("Got %d characters...", nCnt);
         if(nCnt != (expectedLength + 1))
