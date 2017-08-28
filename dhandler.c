@@ -265,7 +265,8 @@ static char szForeStrings[] =
 "Mostly clear and cooler.\0\0" ;
 
 
-static RTDATA rcd;          /* the one and only real time weather packet */
+static RTDATA rcd;          /* the one and only v1 real time weather packet */
+static RTDATA2 rcd2;          /* the one and only v2 real time weather packet */
 static HLDATA hld;          /* the one and only highs/lows packet */
 
 /* local functions */
@@ -347,6 +348,17 @@ void GetRTData(char *szData)
 
 
 
+/*--------------------------------------------------------------------------
+    GetRT2Data
+    Gets the real time weather data packet v2 to the static RTDATA2 struct.
+----------------------------------------------------------------------------*/
+void GetRT2Data(char *szData)
+{
+    memcpy((char*)&rcd2, szData, sizeof(RTDATA2));
+}
+
+
+
 
 /*--------------------------------------------------------------------------
     GetHLData
@@ -359,14 +371,55 @@ void GetHLData(char *szData)
 
 
 
+
+/*--------------------------------------------------------------------------
+    GetHLData
+    Gets the high/low weather data packet to the static HLDATA struct.
+----------------------------------------------------------------------------*/
+char* getWindRose(uint8_t bearing) {
+    if(bearing >= 347 && bearing < 12)        /* compass rose version */
+        return "N";
+    else if(bearing >= 12 && bearing < 34)
+        return "NNE";
+    else if(bearing >= 34 && bearing < 57)
+        return "NE";
+    else if(bearing >= 57 && bearing < 79)
+        return "ENE";
+    else if(bearing >= 79 && bearing < 102)
+        return "E";
+    else if(bearing >= 102 && bearing < 124)
+        return "ESE";
+    else if(bearing >= 124 && bearing < 147)
+        return "SE";
+    else if(bearing >= 147 && bearing < 170)
+        return "SSE";
+    else if(bearing >= 170 && bearing < 192)
+        return "S";
+    else if(bearing >= 192 && bearing < 214)
+        return "SSW";
+    else if(bearing >= 214 && bearing < 237)
+        return "SW";
+    else if(bearing >= 237 && bearing < 259)
+        return "WSW";
+    else if(bearing >= 259 && bearing < 280)
+        return "W";
+    else if(bearing >= 280 && bearing < 303)
+        return "WNW";
+    else if(bearing >= 303 && bearing < 347)
+        return "NW";
+    else    /*  >326 <347 */
+        return "NNW";
+}
+
 /*--------------------------------------------------------------------------
     PrintRTData
     Dumps the real time weather data to stdout.
 ----------------------------------------------------------------------------*/
-void PrintRTData(void)
+void PrintRTData(bool includeLoop2Data)
 {
     int16_t i;
 
+    printf("%s = 0x%04x\n", _NEXT_RECORD, rcd.wNextRec );
     /* 3-hour rolling baro trend */
     i = rcd.cP;
     printf("%s = ", _BARO_TREND);
@@ -392,42 +445,17 @@ void PrintRTData(void)
     printf("%s = %d\n", _INSIDE_HUM, rcd.yInsideHum );
     printf("%s = %.1f\n", _OUTSIDE_TEMP, ((int16_t)rcd.wOutsideTemp) / 10.0 );
     printf("%s = %d\n", _WIND_SPEED, rcd.yWindSpeed );
-    printf("%s = %d\n", _WIND_AVG_SPEED, rcd.yAvgWindSpeed );
+    if (includeLoop2Data) {
+      printf("%s = %.1f\n", _WIND_AVG_SPEED, (double)rcd2.avgWindSpd10m / 10.0 );
+    } else {
+      printf("%s = %d\n", _WIND_AVG_SPEED, rcd.yAvgWindSpeed );
+    }
+    if (includeLoop2Data) printf("%s = %.1f\n", _WIND_2M_AVG_SPEED, (double)rcd2.avgWindSpd2m / 10.0 );
     printf("%s = %d\n", _WIND_DIR, rcd.wWindDir );
-    printf("%s = ", _WIND_DIR_ROSE);
-    if(rcd.wWindDir >= 347 && rcd.wWindDir < 12)        /* compass rose version */
-        printf("N\n");
-    else if(rcd.wWindDir >= 12 && rcd.wWindDir < 34)
-        printf("NNE\n");
-    else if(rcd.wWindDir >= 34 && rcd.wWindDir < 57)
-        printf("NE\n");
-    else if(rcd.wWindDir >= 57 && rcd.wWindDir < 79)
-        printf("ENE\n");
-    else if(rcd.wWindDir >= 79 && rcd.wWindDir < 102)
-        printf("E\n");
-    else if(rcd.wWindDir >= 102 && rcd.wWindDir < 124)
-        printf("ESE\n");
-    else if(rcd.wWindDir >= 124 && rcd.wWindDir < 147)
-        printf("SE\n");
-    else if(rcd.wWindDir >= 147 && rcd.wWindDir < 170)
-        printf("SSE\n");
-    else if(rcd.wWindDir >= 170 && rcd.wWindDir < 192)
-        printf("S\n");
-    else if(rcd.wWindDir >= 192 && rcd.wWindDir < 214)
-        printf("SSW\n");
-    else if(rcd.wWindDir >= 214 && rcd.wWindDir < 237)
-        printf("SW\n");
-    else if(rcd.wWindDir >= 237 && rcd.wWindDir < 259)
-        printf("WSW\n");
-    else if(rcd.wWindDir >= 259 && rcd.wWindDir < 280)
-        printf("W\n");
-    else if(rcd.wWindDir >= 280 && rcd.wWindDir < 303)
-        printf("WNW\n");
-    else if(rcd.wWindDir >= 303 && rcd.wWindDir < 347)
-        printf("NW\n");
-    else    /*  >326 <347 */
-        printf("NNW\n");
-
+    printf("%s = %s\n", _WIND_DIR_ROSE, getWindRose(rcd.wWindDir) );
+    if (includeLoop2Data) printf("%s = %d\n", _WIND_10M_GUST_SPEED, rcd2.windGust10m );
+    if (includeLoop2Data) printf("%s = %d\n", _WIND_10M_GUST_DIR, rcd2.windGust10mDir );
+    if (includeLoop2Data) printf("%s = %s\n", _WIND_10M_GUST_DIR_ROSE, getWindRose(rcd2.windGust10mDir) );
     printf("%s = %d\n", _OUTSIDE_HUM, rcd.yOutsideHum );
     printf("%s = %.2f\n", _RAIN_RATE, rcd.wRainRate / 100.0 );
     printf("%s = %s\n", _IS_RAINING, rcd.wRainRate ? "yes" : "no");
@@ -441,11 +469,16 @@ void PrintRTData(void)
         printf("n/a\n");
     else
         printf("%d\n", rcd.wSolarRad );
+    if (includeLoop2Data) printf("%s = %d\n", _HEAT_INDEX, rcd2.heatIndex );
+    if (includeLoop2Data) printf("%s = %d\n", _WIND_CHILL, rcd2.windChill );
+    if (includeLoop2Data) printf("%s = %d\n", _THSW_INDEX, rcd2.thswIndex );
     printf("%s = %.2f\n", _RAIN_STORM, rcd.wStormRain / 100.0 );
     printf("%s = ", _STORM_START_DATE);
     PrintDate(rcd.wStormStart);
     printf("\n");
 
+    if (includeLoop2Data) printf("%s = %.2f\n", _RAIN_LAST_15M, rcd2.last15mRain / 100.0);
+    if (includeLoop2Data) printf("%s = %.2f\n", _RAIN_LAST_HOUR, rcd2.lastHourRain / 100.0);
     printf("%s = %.2f\n", _DAY_RAIN, rcd.wRainDay / 100.0);
     printf("%s = %.2f\n", _MONTH_RAIN, rcd.wRainMonth / 100.0);
     printf("%s = %.2f\n", _YEAR_RAIN, rcd.wRainYear / 100.0);

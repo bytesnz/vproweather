@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
     time_t tt;
     int16_t i;
     int16_t nCnt;
+    bool gotV2Data = true;
 
 
     /* Get command line parms */
@@ -343,7 +344,14 @@ int main(int argc, char *argv[])
         }
         GetRTData(szSerBuffer);             /* get data to struct */
 
-        PrintRTData();                      /* ...and to stdout */
+        /* Get LOOP 2 data */
+        if (runCommand("LPS 2 1\n", 99, "real time v2")) {
+          gotV2Data = false;
+        } else {
+          GetRT2Data(szSerBuffer);             /* get data to struct */
+        }
+
+        PrintRTData(gotV2Data);                      /* ...and to stdout */
     }
 
     /* all done, exit */

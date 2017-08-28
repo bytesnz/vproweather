@@ -31,8 +31,9 @@
 /* exports */
 extern int CheckCRC(int nCnt, char *pData);
 extern void GetRTData(char *szData);
+extern void GetRT2Data(char *szData);
 extern void GetHLData(char *szData);
-extern void PrintRTData(void);
+extern void PrintRTData(bool includeLoop2Data);
 extern void PrintHLData(void);
 extern void PrintGDData(uint8_t * pData);
 extern void PrintTime(char *szData);
@@ -282,6 +283,71 @@ typedef struct t_RTDATA
     uint8_t  yCR;            /* 96 Carraige Return (\r) 0x0d                 */
     uint16_t WCRC;           /* 97 CRC check bytes (CCITT-16 standard)       */
 } PACKED RTDATA;
+
+
+/* Definition of Davis LOOP2 data packet */
+typedef struct t_RTDATA2
+{
+    uint8_t  yACK;           /* -1 ACK from stream                           */
+    char     cL;             /* 0  character "L"                             */
+    char     cO;             /* 1  character "O"                             */
+    char     cO1;            /* 2  character "O"                             */
+    char     cP;             /* 3  character "P" (RevA) or the current       */
+                             /*    3-hour Barometer trend as follows:        */
+                             /*    196 = Falling Rapidly                     */
+                             /*    236 = Falling Slowly                      */
+                             /*    0   = Steady                              */
+                             /*    20  = Rising Slowly                       */
+                             /*    60  = Rising Rapidly                      */
+                             /* any other value is 3-hour data not available */
+    uint8_t  packetType;     /* 4 Always zero for current firmware release   */
+    uint16_t unused;         /* 5 Unused, filled with 0x7FFF                 */
+    uint16_t barometer;      /* 7 Current barometer as (Hg / 1000)           */
+    int16_t  insideTemp;     /* 9 Inside Temperature as (DegF / 10)          */
+    uint8_t  insideHum;      /* 11 Inside Humidity as percentage             */
+    int16_t  outsideTemp;    /* 12 Outside Temperature as (DegF / 10)        */
+    uint8_t  windSpeed;      /* 14 Wind Speed                                */
+    uint8_t  unused2;        /* 15 Unused, filled with 0xFF                  */
+    uint16_t windDir;        /* 16 Wind Direction in degress                 */
+    uint16_t avgWindSpd10m;  /* 18 10-minute average wind speed              */
+    uint16_t avgWindSpd2m;   /* 20 2-minute average wind speed               */
+    uint16_t windGust10m;    /* 22 10-minute wind gust maximum?              */
+    uint16_t windGust10mDir; /* 24 10-minute wind gust direction             */
+    uint16_t unused3;        /* 26 Unused, filled with 0x7FFF                */
+    uint16_t unused4;        /* 28 Unused, filled with 0x7FFF                */
+    int16_t  dewPoint;       /* 30 Signed two byte value to the whole DegF   */
+    uint16_t unused5;        /* 32 Unused, filled with 0x7FFF                */
+    uint8_t  outsideHum;     /* 33 Outside humidity in %                     */
+    uint8_t  unused6;        /* 34 Unused, filled with 0xFF                  */
+    int16_t  heatIndex;      /* 35 Heat index in DegF                        */
+    int16_t  windChill;      /* 37 Wind Chill in DegF                        */
+    int16_t  thswIndex;      /* 39 THSW Index in DegF                        */
+    uint16_t rainRate;       /* 41 Rain rate in clicks per hour              */
+    uint8_t  uvLevel;        /* 43 UV Level                                  */
+    uint16_t solarRad;       /* 44 Solar Radiation (W/m^2)                   */
+    uint16_t stormRain;      /* 46 Total Storm Rain (number of rain clicks)  */
+    uint16_t stormStart;     /* 48 Start date of current storm               */
+                             /*    mmmmdddddyyyyyyy                          */
+    uint16_t dayRain;        /* 50 Rain Today                                */
+    uint16_t last15mRain;    /* 52 Rain in the last 15 minutes               */
+    uint16_t lastHourRain;   /* 54 Rain in the last hour                     */
+    uint16_t dailyET;        /* 56 Daily ET                                  */
+    uint16_t last24hrRain;   /* 58 Rain in the last 24 hours                 */
+    uint8_t  barRedMethod;   /* 60 Barometric reduction method               */
+                             /*    0 - user offset                           */
+                             /*    1 - altimeter setting                     */
+                             /*    2 - NOAA bar reduction (always for VP2)   */
+    uint16_t userBarOffset;  /* 61 User-entered barometric offset (1000th/") */
+    uint16_t barCaliNumber;  /* 63 Calibration offset in 1000th of an inch   */
+    uint16_t barRaw;         /* 65 Barometric sensor raw reading (1000th/")  */
+    uint16_t barAbsPress;    /* 67 Raw Barometric reading - user offset      */
+    uint16_t altSetting;     /* 69 Altimeter setting (1000th/")              */
+    uint8_t  unused7;        /* 71 Unused, filled with 0xFF                  */
+    uint8_t  unused8;        /* 72`Undefined                                 */
+    uint8_t  yLF;            /* 95 Line Feed (\n) 0x0a                       */
+    uint8_t  yCR;            /* 96 Carraige Return (\r) 0x0d                 */
+    uint16_t WCRC;           /* 97 CRC check bytes (CCITT-16 standard)       */
+} PACKED RTDATA2;
 
 
 /* Definition of Davis HILOW packet */
