@@ -37,6 +37,7 @@
 #include "names.h"
 #include "dhandler.h"
 
+#define VERSION "1.2.0"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
@@ -56,7 +57,8 @@ static int8_t yDelay;                   /* Read wait time */
 static char szSerBuffer[4200];          /* serial read/write buffer */
 static char szSWriteErr[] = "Serial Port Write Error";
 
-
+int fdser;                      /* serial device fd */
+char ch;
 
 /* local functions */
 static int GetParms(int argc, char *argv[]);
@@ -64,27 +66,25 @@ static int WakeUp(int nfd);
 static int ReadNextChar(int fdser, char *pChar);
 static void Delay(int secs, long microsecs);
 static int ReadToBuffer(int fdser, char *pszBuffer, int nBufSize);
-
-
+static int runCommand(char* command, int expectedLength, char* dataLabel);
 
 /*--------------------------------------------------------------------------
     main
 ----------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
-    int fdser;                      /* serial device fd */
     struct termios oldtio, newtio;  /* serial device configuration */
-    int16_t nCnt;
     struct tm stm;
     time_t tt;
     int16_t i;
-    char ch;
+    int16_t nCnt;
 
 
     /* Get command line parms */
     if (!GetParms(argc, argv)) {
-        printf("vproweather v0.6 18-OCT-2004 written by Joe Jaworski ");
-        printf("\nSee http://www.joejaworski.com/weather/ for latest version and info");
+        printf("vproweather v%0.2f\n", VERSION);
+        printf("https://github.com/bytesnz/vproweather\n");
+        printf("Original work by Joe Jaworski http://www.joejaworski.com/weather/\n");
         printf("\nUsage: vproweather [Options] Device\n");
         printf("Options:\n");
         printf(" -x, --get-realtime    Get real time weather data.\n");
@@ -240,33 +240,9 @@ int main(int argc, char *argv[])
 
     /* Get weather station time */
     if(bGetTime) {
-        if(bVerbose)
-            printf("Getting weather station time...\n");
-        while(ReadNextChar(fdser, &ch));    /* clear channel and delay */
-        strcpy(szSerBuffer, "GETTIME\n");   /* make Davis cmd string */
-        if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
-        {
-            perror(szSWriteErr);
-            exit(2);
+        if (runCommand("GETTIME\n", 8, "time")) {
+          exit(2);
         }
-        nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
-        if(bVerbose) {
-            printf("Got %d characters...", nCnt);
-            if(nCnt != 9)
-                printf("Bad\n");
-            else
-                printf("Good\n");
-        }
-        if(nCnt != 9) {
-            fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
-            exit(2);
-        }
-        if((nCnt = CheckCRC(8, szSerBuffer+1))) {   /* check crc */
-            fprintf(stderr,"vproweather: CRC failure %d.\n", nCnt);
-            exit(2);
-        }
-        else if (bVerbose)
-            printf("CRC verified good on TIME packet.\n");
 
         PrintTime(szSerBuffer);                 /* ...and to stdout */
     }
@@ -327,35 +303,9 @@ int main(int argc, char *argv[])
 
     /* Get highs/lows data set */
     if(bGetHLD) {
-        if(bVerbose)
-            printf("Getting highs/lows data set...\n");
-
-        while(ReadNextChar(fdser, &ch));        /* clear channel and delay */
-        strcpy(szSerBuffer, "HILOWS\n");        /* make Davis cmd string */
-        if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
-        {
-            perror(szSWriteErr);
-            exit(2);
+        if(runCommand("HILOWS\n", 438, "hi/lows")) {
+          exit(2);
         }
-        tcdrain(fdser);
-        nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
-        if(bVerbose) {
-            printf("Got %d characters...", nCnt);
-            if(nCnt != 439)
-                printf("Bad\n");
-            else
-                printf("Good\n");
-        }
-        if(nCnt != 439) {
-            fprintf(stderr,"vproweather: Didn't get all data. Try changing delay parameter.\n");
-            exit(2);
-        }
-        if((nCnt = CheckCRC(438, szSerBuffer+1))) { /* check crc */
-            fprintf(stderr,"vproweather: CRC failure %d.\n", nCnt);
-            exit(2);
-        }
-        else if (bVerbose)
-            printf("CRC verified good on HILOWS packet.\n");
 
         GetHLData(szSerBuffer);             /* get data to struct */
         PrintHLData();                      /* ...and to stdout */
@@ -365,35 +315,9 @@ int main(int argc, char *argv[])
 
     /* Get Graph data sets */
     if(bGetGD) {
-        if(bVerbose)
-            printf("Getting graph data set...\n");
-
-        while(ReadNextChar(fdser, &ch));        /* clear channel and delay */
-        strcpy(szSerBuffer, "GETEE\n");         /* make Davis cmd string */
-        if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
-        {
-            perror(szSWriteErr);
-            exit(2);
+        if (runCommand("GETEE\n", 4098, "graph")) {
+          exit(2);
         }
-        tcdrain(fdser);
-        nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
-        if(bVerbose) {
-            printf("Got %d characters...", nCnt);
-            if(nCnt != 4099)
-                printf("Bad\n");
-            else
-                printf("Good\n");
-        }
-        if(nCnt != 4099) {
-            fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
-            exit(2);
-        }
-        if((nCnt = CheckCRC(4098, szSerBuffer+1))) {    /* check crc */
-            fprintf(stderr, "vproweather: CRC failure %d.\n", nCnt);
-            exit(2);
-        }
-        else if (bVerbose)
-            printf("CRC verified good on full EEPROM packet.\n");
 
         PrintGDData((uint8_t*)szSerBuffer);         /* ...and to stdout */
     }
@@ -402,37 +326,12 @@ int main(int argc, char *argv[])
 
     /* Get real time data set (Davis LOOP data) */
     if(bGetRTD) {
-        if(bVerbose)
-            printf("Getting real time data set...\n");
-
-        while(ReadNextChar(fdser, &ch));        /* clear channel and delay */
-        strcpy(szSerBuffer, "LOOP 1\n");        /* make Davis cmd string */
-        if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
-        {
-            perror(szSWriteErr);
-            exit(2);
+        /* Get LOOP 1 data */
+        if (runCommand("LOOP 1\n", 99, "real time v1")) {
+          exit(2);
         }
-        tcdrain(fdser);
-        nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
-        if(bVerbose) {
-            printf("Got %d characters...", nCnt);
-            if(nCnt != 100)
-                printf("Bad\n");
-            else
-                printf("Good\n");
-        }
-        if(nCnt != 100) {
-            fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
-            exit(2);
-        }
-        if((nCnt = CheckCRC(99, szSerBuffer+1))) {  /* check crc */
-            fprintf(stderr, "vproweather: CRC failure %d.\n", nCnt);
-            exit(2);
-        }
-        else if (bVerbose)
-            printf("CRC verified good on LOOP packet.\n");
-
         GetRTData(szSerBuffer);             /* get data to struct */
+
         PrintRTData();                      /* ...and to stdout */
     }
 
@@ -627,4 +526,52 @@ int ReadToBuffer(int nfd, char *pszBuffer, int nBufSize)
         ++nPos;
     }
     return -1;                  /* buffer overflow */
+}
+
+
+
+
+/*--------------------------------------------------------------------------
+    RunCommand
+    Run a command and check CRC of the reply. If the command is run
+    successfully and the data of the CRC passes, returns 0, otherwise -1
+----------------------------------------------------------------------------*/
+int runCommand(char* command, int expectedLength, char* dataLabel)
+{
+    int16_t nCnt;
+
+    if(bVerbose)
+        printf("Getting %s data set...\n", dataLabel);
+
+    while(ReadNextChar(fdser, &ch));        /* clear channel and delay */
+    strcpy(szSerBuffer, command);         /* make Davis cmd string */
+    if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
+    {
+        perror(szSWriteErr);
+        return -1;
+        exit(2);
+    }
+    tcdrain(fdser);
+    nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
+    if(bVerbose) {
+        printf("Got %d characters...", nCnt);
+        if(nCnt != (expectedLength + 1))
+            printf("Bad\n");
+        else
+            printf("Good\n");
+    }
+    if(nCnt != (expectedLength + 1)) {
+        fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
+        return -1;
+        exit(2);
+    }
+    if((nCnt = CheckCRC(expectedLength, szSerBuffer+1))) {    /* check crc */
+        fprintf(stderr, "vproweather: CRC failure %d.\n", nCnt);
+        return -1;
+        exit(2);
+    }
+    else if (bVerbose)
+        printf("CRC verified good on full %s packet.\n", dataLabel);
+
+    return 0;
 }
