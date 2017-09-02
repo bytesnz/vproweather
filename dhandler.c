@@ -287,11 +287,15 @@ static void PrintTimeRef(void);
 
 
 
-/*--------------------------------------------------------------------------
-    CheckCRC
-    Verifies the crc against a passed buffer. Returns the non-zero CRC code
-    if error, zero if the crc passed.
-----------------------------------------------------------------------------*/
+/**
+ * Verifies the crc against a passed buffer. Returns the non-zero CRC code
+ * if error, zero if the crc passed.
+ *
+ * @param nCnt Number of bytes to check CRC of
+ * @param pData Pointer to string containing data
+ *
+ * @returns Leftover checksum. Should be 0 for valid data
+ */
 int CheckCRC(int nCnt, char *pData)
 {
     int i;
@@ -308,11 +312,14 @@ int CheckCRC(int nCnt, char *pData)
 
 
 
-/*--------------------------------------------------------------------------
-    GenerateCRC
-    Generate the two byte CRC string of a string to pass to the Vantage when
-    sending data to it.
-----------------------------------------------------------------------------*/
+/**
+ * Generate the two byte CRC string of a string to pass to the Vantage when
+ * sending data to it.
+ *
+ * @param nCnt Number of bytes to check CRC of
+ * @param pData Pointer to string containing data to generate the CRC for
+ * @param crc Pointer to string to put the generated CRC
+ */
 void GenerateCRC(int nCnt, char *pData, char *crc)
 {
   uint16_t value = CheckCRC(nCnt, pData);
@@ -322,11 +329,14 @@ void GenerateCRC(int nCnt, char *pData, char *crc)
 }
 
 
-/*--------------------------------------------------------------------------
-    MakeVantageDatetim
-    Creates a Vantage Datetime uint16_t[2] from the given time struct
-    [ day + month*32 + (year-2000)*512, 100*hours + minutes ]
-----------------------------------------------------------------------------*/
+/**
+ * Creates a Vantage Datetime uint16_t[2] from the given time struct
+ * [ day + month*32 + (year-2000)*512, 100*hours + minutes ]
+ *
+ * @param time Time to generate teh Datetime form
+ * @param datetimeString Pointer to string where to put the generated
+ *     datetime string
+ */
 void MakeVantageDatetime(struct tm* time, char *datetimeString)
 {
   uint16_t value = 0;
@@ -346,10 +356,12 @@ void MakeVantageDatetime(struct tm* time, char *datetimeString)
   }
 }
 
-/*--------------------------------------------------------------------------
-    PrintTime
-    Prints the time data retrieved from the weather station.
-----------------------------------------------------------------------------*/
+/**
+ * Prints the time data retrieved from the weather station.
+ *
+ * @param szData Pointer to string containing time data to convert to
+ *     time string
+ */
 void PrintTime(char *szData)
 {
     struct tm stm;
@@ -377,10 +389,11 @@ void PrintTime(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    StoreArchPacket
-    Copies the Archive download packet to the static ARCHDOWNLOAD struct.
-----------------------------------------------------------------------------*/
+/**
+ * Copies the Archive download packet to the static ARCHDOWNLOAD struct.
+ *
+ * @param szData Pointer to string buffer containing archive packet
+ */
 void StoreArchPacket(char *szData)
 {
     memcpy((char*)&arcPacket, szData, sizeof(ARCHDOWNLOAD));
@@ -388,10 +401,12 @@ void StoreArchPacket(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    StoreDownloadInfo
-    Copies the Archive download info to the static ARCHINFO struct.
-----------------------------------------------------------------------------*/
+/**
+ * Copies the Archive download info to the static ARCHINFO struct.
+ *
+ * @param szData Pointer to string buffer containing archive download
+ *     info packet
+ */
 void StoreDownloadInfo(char *szData)
 {
     memcpy((char*)&arcInfo, szData, sizeof(ARCHINFO));
@@ -399,10 +414,11 @@ void StoreDownloadInfo(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    GetRTData
-    Gets the real time weather data packet to the static RTDATA struct.
-----------------------------------------------------------------------------*/
+/**
+ * Gets the real time weather data packet to the static RTDATA struct.
+ *
+ * @param szData Pointer to string buffer containing realtime data packet
+ */
 void GetRTData(char *szData)
 {
     memcpy((char*)&rcd, szData, sizeof(RTDATA));
@@ -410,10 +426,11 @@ void GetRTData(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    GetRT2Data
-    Gets the real time weather data packet v2 to the static RTDATA2 struct.
-----------------------------------------------------------------------------*/
+/**
+ * Gets the real time weather data packet v2 to the static RTDATA2 struct.
+ *
+ * @param szData Pointer to string buffer containing realtime data packet
+ */
 void GetRT2Data(char *szData)
 {
     memcpy((char*)&rcd2, szData, sizeof(RTDATA2));
@@ -422,10 +439,11 @@ void GetRT2Data(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    GetHLData
-    Gets the high/low weather data packet to the static HLDATA struct.
-----------------------------------------------------------------------------*/
+/**
+ * Gets the high/low weather data packet to the static HLDATA struct.
+ *
+ * @param szData Pointer to string buffer containing archive packet
+ */
 void GetHLData(char *szData)
 {
     memcpy((char*)&hld, szData, sizeof(HLDATA));
@@ -434,10 +452,13 @@ void GetHLData(char *szData)
 
 
 
-/*--------------------------------------------------------------------------
-    GetHLData
-    Gets the high/low weather data packet to the static HLDATA struct.
-----------------------------------------------------------------------------*/
+/**
+ * Returns the Rose (N,NE,E etc) string for the given bearing.
+ *
+ * @param bearing Bearing in degrees to return rose string for
+ *
+ * @returns Rose string
+ */
 char* getWindRose(uint8_t bearing) {
     if(bearing >= 347 && bearing < 12)        /* compass rose version */
         return "N";
@@ -473,10 +494,11 @@ char* getWindRose(uint8_t bearing) {
         return "NNW";
 }
 
-/*--------------------------------------------------------------------------
-    PrintRTData
-    Dumps the real time weather data to stdout.
-----------------------------------------------------------------------------*/
+/**
+ * Dumps the real time weather data to stdout.
+ *
+ * @param includeLoop2Data Whether or not to include data from LOOP2 packet
+ */
 void PrintRTData(bool includeLoop2Data)
 {
     int16_t i;
@@ -557,13 +579,16 @@ void PrintRTData(bool includeLoop2Data)
 
 
 
-/*--------------------------------------------------------------------------
-    TimeConvert
-    Converts a BCD encoded time value to ascii human readable form. Returns
-    a pointer to a static buffer containing the converted ascii string. The
-    form is '12:33PM'. If you don't like this format, here is where you need
-    to change it.
-----------------------------------------------------------------------------*/
+/**
+ * Converts a BCD encoded time value to ascii human readable form. Returns
+ * a pointer to a static buffer containing the converted ascii string. The
+ * form is '12:33PM'. If you don't like this format, here is where you need
+ * to change it.
+ *
+ * @param wTime Time integer to convert
+ *
+ * @returns The static time string
+ */
 char* TimeConvert(uint16_t wTime)
 {
     static char szBuf[32];          /* static return buffer */
@@ -599,10 +624,176 @@ char* TimeConvert(uint16_t wTime)
 }
 
 
-/*--------------------------------------------------------------------------
-    PrintHLData
-    Dumps the highs/lows weather data to stdout.
-----------------------------------------------------------------------------*/
+
+
+/**
+ * Prints an encoded date value in the form '23-JUN-04'. If you don't like
+ * this format, here is where you need to do your hacking.
+ *
+ * @param wDate Date integer to convert
+ */
+void PrintDate(uint16_t wDate)
+{
+    uint16_t w;
+
+    if(wDate == 0xffff || wDate == 0) { /* ignore missing data */
+        printf("n/a");
+        return;
+    }
+    w = (wDate & 0x0f00) >> 7;          /* get msb of date */
+    if(wDate & 0x0080)
+        ++w;                            /* do crappy Davis format incr */
+    printf("%02d-", w);
+
+    w = (wDate & 0xf000) >> 12;         /* strip out month */
+    switch(w) {
+        case 1: printf("JAN"); break;
+        case 2: printf("FEB"); break;
+        case 3: printf("MAR"); break;
+        case 4: printf("APR"); break;
+        case 5: printf("MAY"); break;
+        case 6: printf("JUN"); break;
+        case 7: printf("JUL"); break;
+        case 8: printf("AUG"); break;
+        case 9: printf("SEP"); break;
+        case 10: printf("OCT"); break;
+        case 11: printf("NOV"); break;
+        case 12: printf("DEC"); break;
+        default: printf("???"); break;
+    }
+
+    printf("-20%02d", (wDate & 0x003f) );
+}
+
+
+
+/**
+ * Prints time references for use in graph axis generations.
+ */
+void PrintTimeRef(void)
+{
+    struct tm stm;
+    time_t tt;
+    int i;
+
+    /* 10min reference */
+    printf("%s = ", _TIME_REF_10MIN );
+    for(i = 23; i > -1; i--)
+    {
+        time(&tt);
+        stm = *localtime(&tt);              /* get time now */
+        stm.tm_min = (stm.tm_min/10)*10;    /* round to nearest 15min incr */
+        stm.tm_min -= (10 * i);             /* back by 10 minutes */
+        tt = mktime(&stm);
+        stm = *localtime(&tt);              /* get time again */
+        printf("%s", TimeConvert( (stm.tm_hour * 100)+stm.tm_min) );
+        if(i)
+            printf(",");
+    }
+    printf("\n");
+
+
+    /* 15min reference */
+    printf("%s = ", _TIME_REF_15MIN );
+    for(i = 23; i > -1; i--)
+    {
+        time(&tt);
+        stm = *localtime(&tt);              /* get time now */
+        stm.tm_min = (stm.tm_min/15)*15;    /* round to nearest 15min incr */
+        stm.tm_min -= (15 * i);             /* back by 15 minutes */
+        tt = mktime(&stm);
+        stm = *localtime(&tt);              /* get time again */
+        printf("%s", TimeConvert( (stm.tm_hour * 100)+stm.tm_min) );
+        if(i)
+            printf(",");
+    }
+    printf("\n");
+
+
+
+
+    /* hours reference */
+    printf("%s = ", _TIME_REF_HOURS );
+    for(i = 23; i > -1; i--)
+    {
+        time(&tt);
+        stm = *localtime(&tt);          /* get time now */
+        stm.tm_hour -= i;               /* back by hours */
+        tt = mktime(&stm);
+        stm = *localtime(&tt);          /* get time again */
+        printf("%s", TimeConvert(stm.tm_hour * 100));
+        if(i)
+            printf(",");
+    }
+    printf("\n");
+
+
+    /* days reference */
+    printf("%s = ", _TIME_REF_DAYS);
+    for(i = 24; i; i--)
+    {
+        time(&tt);
+        stm = *localtime(&tt);          /* get time now */
+        stm.tm_mday -= i;               /* back by days */
+        tt = mktime(&stm);
+        stm = *localtime(&tt);          /* get time again */
+        printf("%d/%d", stm.tm_mon+1, stm.tm_mday);
+        if(i > 1)
+            printf(",");
+    }
+    printf("\n");
+
+    /* months reference */
+    printf("%s = ", _TIME_REF_MONTHS);
+    time(&tt);
+    stm = *localtime(&tt);              /* get time now */
+    for(i = 24; i; i--)
+    {
+        switch(stm.tm_mon)
+        {
+            case 0: printf("JAN"); break;
+            case 1: printf("FEB"); break;
+            case 2: printf("MAR"); break;
+            case 3: printf("APR"); break;
+            case 4: printf("MAY"); break;
+            case 5: printf("JUN"); break;
+            case 6: printf("JUL"); break;
+            case 7: printf("AUG"); break;
+            case 8: printf("SEP"); break;
+            case 9: printf("OCT"); break;
+            case 10: printf("NOV"); break;
+            case 11: printf("DEC"); break;
+            default: printf("???"); break;
+        }
+        stm.tm_mon++;
+        if (stm.tm_mon > 11) stm.tm_mon = 0;
+
+        if(i > 1)
+            printf(",");
+    }
+    printf("\n");
+
+    /* years reference */
+    printf("%s = ", _TIME_REF_YEARS);
+    for(i = 25; i; i--)
+    {
+        time(&tt);
+        stm = *localtime(&tt);          /* get time now */
+        stm.tm_year -= i;               /* back by years */
+        tt = mktime(&stm);
+        stm = *localtime(&tt);          /* get time again */
+        printf("%04d", stm.tm_year + 1900);
+        if(i > 1)
+            printf(",");
+    }
+    printf("\n");
+
+}
+
+
+/**
+ * Dumps the highs/lows weather data to stdout.
+ */
 void PrintHLData(void)
 {
     printf("%s = %2.2f\n", _BARO_LO_DAY, hld.wBaroLoDay / 1000.0 );
@@ -696,10 +887,11 @@ void PrintHLData(void)
 }
 
 
-/*--------------------------------------------------------------------------
-    PrintGDData
-    Dumps the graphics sets to stdout.
-----------------------------------------------------------------------------*/
+/**
+ * Dumps the graphics sets to stdout.
+ *
+ * @param pData Pointer to string containing the data print print
+ */
 void PrintGDData(uint8_t * pData)
 {
     PrintTimeRef();                 /* Print reference times */
@@ -1001,10 +1193,14 @@ void PrintGDData(uint8_t * pData)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintTempSet24
-    Prints a comma separated list of temperature values.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of temperature values.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintTempSet24(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 {
     int i, nEntry;
@@ -1028,14 +1224,18 @@ void PrintTempSet24(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintTempSet25
-    Prints a comma separated list of temperature values from a 25 data set.
-    The Davis EEPROM keeps 24+1 records in some data sets, which the extra one
-    is the current value (month or year). We discard this to keep all graphs
-    consistent at 24. In all cases, you can get this data from the highs/lows
-    data set anyway.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of temperature values from a 25 data set.
+ * The Davis EEPROM keeps 24+1 records in some data sets, which the extra one
+ * is the current value (month or year). We discard this to keep all graphs
+ * consistent at 24. In all cases, you can get this data from the highs/lows
+ * data set anyway.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintTempSet25(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 {
     int i, nEntry;
@@ -1061,10 +1261,14 @@ void PrintTempSet25(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 }
 
 
-/*--------------------------------------------------------------------------
-    PrintByteSet
-    Prints a comma separated list of byte values.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of byte values.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintByteSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 {
     int i, nEntry;
@@ -1095,10 +1299,14 @@ void PrintByteSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintTimeSet
-    Prints the comma separated list of times.
-----------------------------------------------------------------------------*/
+/**
+ * Prints the comma separated list of times.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintTimeSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 {
     int i, nEntry;
@@ -1122,10 +1330,14 @@ void PrintTimeSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintBarSet
-    Prints a comma separated list of barometers.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of barometers.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintBarSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 {
     int i, nEntry;
@@ -1158,10 +1370,14 @@ void PrintBarSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintRainRateSet
-    Prints a comma separated list of rain rates.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of rain rates.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintRainRateSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 {
     int i, nEntry;
@@ -1192,52 +1408,14 @@ void PrintRainRateSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
 
 
-
-/*--------------------------------------------------------------------------
-    PrintDate
-    Prints an encoded date value in the form '23-JUN-04'. If you don't like
-    this format, here is where you need to do your hacking.
-----------------------------------------------------------------------------*/
-void PrintDate(uint16_t wDate)
-{
-    uint16_t w;
-
-    if(wDate == 0xffff || wDate == 0) { /* ignore missing data */
-        printf("n/a");
-        return;
-    }
-    w = (wDate & 0x0f00) >> 7;          /* get msb of date */
-    if(wDate & 0x0080)
-        ++w;                            /* do crappy Davis format incr */
-    printf("%02d-", w);
-
-    w = (wDate & 0xf000) >> 12;         /* strip out month */
-    switch(w) {
-        case 1: printf("JAN"); break;
-        case 2: printf("FEB"); break;
-        case 3: printf("MAR"); break;
-        case 4: printf("APR"); break;
-        case 5: printf("MAY"); break;
-        case 6: printf("JUN"); break;
-        case 7: printf("JUL"); break;
-        case 8: printf("AUG"); break;
-        case 9: printf("SEP"); break;
-        case 10: printf("OCT"); break;
-        case 11: printf("NOV"); break;
-        case 12: printf("DEC"); break;
-        default: printf("???"); break;
-    }
-
-    printf("-20%02d", (wDate & 0x003f) );
-}
-
-
-
-
-/*--------------------------------------------------------------------------
-    PrintDateSet
-    Prints a comma separated list of date items.
-----------------------------------------------------------------------------*/
+/**
+ * Prints a comma separated list of date items.
+ *
+ * @param pData Pointer to string containing data items
+ * @param nOffset Offset of first data item
+ * @param yNext Number of bytes to move for next data item
+ * @param nSetSize Number of items in data set
+ */
 void PrintDateSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 {
     int i, nEntry;
@@ -1265,136 +1443,9 @@ void PrintDateSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 }
 
 
-
-/*--------------------------------------------------------------------------
-    PrintTimeRef
-    Prints time references for use in graph axis generations.
-----------------------------------------------------------------------------*/
-void PrintTimeRef(void)
-{
-    struct tm stm;
-    time_t tt;
-    int i;
-
-    /* 10min reference */
-    printf("%s = ", _TIME_REF_10MIN );
-    for(i = 23; i > -1; i--)
-    {
-        time(&tt);
-        stm = *localtime(&tt);              /* get time now */
-        stm.tm_min = (stm.tm_min/10)*10;    /* round to nearest 15min incr */
-        stm.tm_min -= (10 * i);             /* back by 10 minutes */
-        tt = mktime(&stm);
-        stm = *localtime(&tt);              /* get time again */
-        printf("%s", TimeConvert( (stm.tm_hour * 100)+stm.tm_min) );
-        if(i)
-            printf(",");
-    }
-    printf("\n");
-
-
-    /* 15min reference */
-    printf("%s = ", _TIME_REF_15MIN );
-    for(i = 23; i > -1; i--)
-    {
-        time(&tt);
-        stm = *localtime(&tt);              /* get time now */
-        stm.tm_min = (stm.tm_min/15)*15;    /* round to nearest 15min incr */
-        stm.tm_min -= (15 * i);             /* back by 15 minutes */
-        tt = mktime(&stm);
-        stm = *localtime(&tt);              /* get time again */
-        printf("%s", TimeConvert( (stm.tm_hour * 100)+stm.tm_min) );
-        if(i)
-            printf(",");
-    }
-    printf("\n");
-
-
-
-
-    /* hours reference */
-    printf("%s = ", _TIME_REF_HOURS );
-    for(i = 23; i > -1; i--)
-    {
-        time(&tt);
-        stm = *localtime(&tt);          /* get time now */
-        stm.tm_hour -= i;               /* back by hours */
-        tt = mktime(&stm);
-        stm = *localtime(&tt);          /* get time again */
-        printf("%s", TimeConvert(stm.tm_hour * 100));
-        if(i)
-            printf(",");
-    }
-    printf("\n");
-
-
-    /* days reference */
-    printf("%s = ", _TIME_REF_DAYS);
-    for(i = 24; i; i--)
-    {
-        time(&tt);
-        stm = *localtime(&tt);          /* get time now */
-        stm.tm_mday -= i;               /* back by days */
-        tt = mktime(&stm);
-        stm = *localtime(&tt);          /* get time again */
-        printf("%d/%d", stm.tm_mon+1, stm.tm_mday);
-        if(i > 1)
-            printf(",");
-    }
-    printf("\n");
-
-    /* months reference */
-    printf("%s = ", _TIME_REF_MONTHS);
-    time(&tt);
-    stm = *localtime(&tt);              /* get time now */
-    for(i = 24; i; i--)
-    {
-        switch(stm.tm_mon)
-        {
-            case 0: printf("JAN"); break;
-            case 1: printf("FEB"); break;
-            case 2: printf("MAR"); break;
-            case 3: printf("APR"); break;
-            case 4: printf("MAY"); break;
-            case 5: printf("JUN"); break;
-            case 6: printf("JUL"); break;
-            case 7: printf("AUG"); break;
-            case 8: printf("SEP"); break;
-            case 9: printf("OCT"); break;
-            case 10: printf("NOV"); break;
-            case 11: printf("DEC"); break;
-            default: printf("???"); break;
-        }
-        stm.tm_mon++;
-        if (stm.tm_mon > 11) stm.tm_mon = 0;
-
-        if(i > 1)
-            printf(",");
-    }
-    printf("\n");
-
-    /* years reference */
-    printf("%s = ", _TIME_REF_YEARS);
-    for(i = 25; i; i--)
-    {
-        time(&tt);
-        stm = *localtime(&tt);          /* get time now */
-        stm.tm_year -= i;               /* back by years */
-        tt = mktime(&stm);
-        stm = *localtime(&tt);          /* get time again */
-        printf("%04d", stm.tm_year + 1900);
-        if(i > 1)
-            printf(",");
-    }
-    printf("\n");
-
-}
-
-
-/*--------------------------------------------------------------------------
-    PrintDownloadInfo
-    Prints how many racords will be downloaded to stdout
-----------------------------------------------------------------------------*/
+/**
+ * Prints how many racords will be downloaded to stdout
+ */
 void PrintDownloadInfo(void)
 {
   printf("%d pages of records will be sent\n", arcInfo.numberOfPages);
@@ -1402,10 +1453,9 @@ void PrintDownloadInfo(void)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintArchHeader
-    Prints the header for the archive records to stdout
-----------------------------------------------------------------------------*/
+/**
+ * Prints the header for the archive records to stdout
+ */
 void PrintArchHeader(void)
 {
   printf("date,time,");
@@ -1435,18 +1485,24 @@ void PrintArchHeader(void)
 
 
 
-/*--------------------------------------------------------------------------
-    PrintArchPacket
-    Dumps the archivepacket records to stdout.
-----------------------------------------------------------------------------*/
-void PrintArchPacket(void)
+/**
+ *  Dumps the archivepacket records to stdout.
+ *
+ *  @param maxArchRecords Maximum number of archive records to print
+ *      (0 to print all)
+ */
+void PrintArchPacket(int maxArcRecords)
 {
   int i;
   ARCDATAB *record;
 
   printf("Sequence number: %d\n", arcPacket.seqNumber);
 
-  for (i = 0; i < 5; i++) {
+  if (maxArcRecords <= 0 || maxArcRecords > 5) {
+    maxArcRecords = 5;
+  }
+
+  for (i = 0; i < maxArcRecords; i++) {
     record = &arcPacket.records[i];
 
     // Date and time
@@ -1499,15 +1555,18 @@ void PrintArchPacket(void)
   }
 }
 
-/*--------------------------------------------------------------------------
-    ForecastString
-    Returns the forecast string for the given forecast rule. I used a brute
-    force approach here based on the research work done by www.oftedahl.no/.
-    The Davis forecast rule byte is actually a compound number where certain
-    bits or formulae can be applied to obtain sets of substrings. However, I
-    haven't been able to figure out the math behind this, and it remains
-    undocumented by Davis. Hence the brute force approach.
-----------------------------------------------------------------------------*/
+/**
+ * Returns the forecast string for the given forecast rule. I used a brute
+ * force approach here based on the research work done by www.oftedahl.no/.
+ * The Davis forecast rule byte is actually a compound number where certain
+ * bits or formulae can be applied to obtain sets of substrings. However, I
+ * haven't been able to figure out the math behind this, and it remains
+ * undocumented by Davis. Hence the brute force approach.
+ *
+ * @param wRule Integer index of forecast rule
+ *
+ * @returns Pointer to forecast rule string
+ */
 char* ForecastString(uint16_t wRule)
 {
     char *ptr;
