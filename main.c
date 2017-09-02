@@ -390,14 +390,27 @@ int main(int argc, char *argv[])
       nextCommand = ACK_STR;
       while (errors < 5) {
         if (runCommand(nextCommand, 267, "archive packet", false, true)) {
-          Delay(1, 0);
           nextCommand = NAK_STR;
           errors++;
+          Delay(yDelay, 0);
         } else {
+          nextCommand = ACK_STR;
           StoreArchPacket(szSerBuffer);
-          PrintArchPacket(0);
-          break;
+          PrintArchPacket((archiveRecords ? archiveRecords % 5 : 0));
+          if (archiveRecords) {
+            archiveRecords = archiveRecords - 5;
+
+            // Exit if printed enough records
+            if (archiveRecords <= 0) {
+              break;
+            }
+          }
         }
+      }
+
+      if (errors >= 5) {
+        printf("Encountered more than 5 errors while downloading, so stopping\n");
+        printf("Try increasing the delay\n");
       }
 
       runCommand(ESC_STR, 0, "Cancel", false, false);
@@ -428,6 +441,7 @@ int main(int argc, char *argv[])
 int GetParms(int argc, char *argv[])
 {
     extern char *optarg;
+    char *endptr;
     extern int optind, opterr, optopt;
     int c, i;
     struct tm *archiveTime = malloc(sizeof(struct tm *));
@@ -494,18 +508,17 @@ int GetParms(int argc, char *argv[])
                   if (strptime(optarg, "%Y-%m-%dT%H:%M", archiveTime) == NULL
                       && strptime(optarg, "%Y-%m-%d", archiveTime) == NULL) {
                     archiveTime = NULL;
-                    /*XXX curTime = 1483228800;
-                    archiveTime = localtime(&curTime);*/
-                    archiveRecords = atoi(optarg);
+                    archiveRecords = strtol(optarg, &endptr, 10);
+
+                    if (*endptr != '\0' || endptr == optarg || archiveRecords < 0) {
+                        fprintf(stderr, "vproweather: Illegal date or number of archive records to download specified.\n");
+                        return 0;
+                    }
                   }
 
                   MakeVantageDatetime(archiveTime, datetimeString);
                   GenerateCRC(4, datetimeString, &datetimeString[4]);
                 }
-                /*if (archiveRecords < -1) {
-                  fprintf(stderr, "vproweather: Illegal number of archive records to download specified.\n");
-                  return 0;
-                }*/
                 break;
 
             case 'd':
