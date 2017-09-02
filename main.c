@@ -1,5 +1,5 @@
 /****************************************************************************/
-/*  vproweather 1.0                                                         */
+/*  vproweather                                                             */
 /*  A program for acquiring data from a Davis Vantage Pro Weather Station.  */
 /*                                                                          */
 /*  Thanks to Paul Davis for his 'remserial' program, and Aaron Logue's     */
@@ -18,6 +18,8 @@
 /*                                                                          */
 /*                                                                          */
 /****************************************************************************/
+#define _XOPEN_SOURCE
+#define _DEFAULT_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
@@ -31,13 +33,15 @@
 #include <unistd.h>
 #include <math.h>
 #include <string.h>
+#include <strings.h>
 #include <getopt.h>
 #include <time.h>
 #include "main.h"
 #include "names.h"
 #include "dhandler.h"
+#include "byte.h"
 
-#define VERSION "1.2.0"
+#define VERSION "1.3.0"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
@@ -49,11 +53,14 @@ static bool bModel;                     /* model name/number */
 static bool bGetRTD;                    /* Get Real Time Data */
 static bool bGetHLD;                    /* Get High Low Data */
 static bool bGetGD;                     /* Get graph data */
+static bool bArchive;                   /* Get archive data */
 static bool bGetInterval;               /* Get arcive interval */
 static bool bGetTime;                   /* Get time flag */
 static bool bSetTime;                   /* Set time flag */
 static bool bHTML;                      /* html substitution flag */
 static int8_t yDelay;                   /* Read wait time */
+static uint16_t archiveRecords = 0;     /* Number of archive records to print */
+static char datetimeString[7] = { '\0' };
 
 static char szSerBuffer[4200];          /* serial read/write buffer */
 static char szSWriteErr[] = "Serial Port Write Error";
@@ -67,7 +74,8 @@ static int WakeUp(int nfd);
 static int ReadNextChar(int fdser, char *pChar);
 static void Delay(int secs, long microsecs);
 static int ReadToBuffer(int fdser, char *pszBuffer, int nBufSize);
-static int runCommand(char* command, int expectedLength, char* dataLabel);
+static int runCommand(char* command, int expectedLength, char* dataLabel,
+        bool expectingAck, bool expectingCrc);
 
 /*--------------------------------------------------------------------------
     main
@@ -80,28 +88,35 @@ int main(int argc, char *argv[])
     int16_t i;
     int16_t nCnt;
     bool gotV2Data = true;
+    char *nextCommand;
+    uint8_t errors = 0;
 
 
     /* Get command line parms */
     if (!GetParms(argc, argv)) {
-        printf("vproweather v%0.2f\n", VERSION);
+        printf("vproweather v%s\n", VERSION);
         printf("https://github.com/bytesnz/vproweather\n");
         printf("Original work by Joe Jaworski http://www.joejaworski.com/weather/\n");
         printf("\nUsage: vproweather [Options] Device\n");
         printf("Options:\n");
-        printf(" -x, --get-realtime    Get real time weather data.\n");
-        printf(" -l, --get-highlow     Get Highs/Lows data.\n");
-        printf(" -g, --get-graph       Get graph data.\n");
-        printf(" -i, --get-interval    Get the current archive interval\n");
-        printf(" -t, --get-time        Get weather station time.\n");
-        printf(" -s, --set-time        Set weather station time to system time.\n");
-        printf(" -o, --bklite-on       Turn backlite on.\n");
-        printf(" -f, --bklite-off      Turn backlite off.\n");
-        printf(" -r, --version         Query for Davis firmware version string.\n");
-        printf(" -m, --model           Query for weather station model name.\n");
-        printf(" -d, --delay=num       Cmd Delay in 1/10ths seconds. Default is 10 (1 sec).\n");
-        printf(" -v, --verbose         Verbose mode.\n");
-        printf(" Device                Serial Device. Required parameter.\n");
+        printf(" -x, --get-realtime     Get real time weather data.\n");
+        printf(" -l, --get-highlow      Get Highs/Lows data.\n");
+        printf(" -g, --get-graph        Get graph data.\n");
+        printf(" -a, --get-archive=arc  Print either:\n");
+        printf("                          - all the archive records (default)\n");
+        printf("                          - all the records since arc date\n");
+        printf("                            (in yyyy-mm-dd[THH:MM format]\n");
+        printf("                          - the last arc records\n");
+        printf(" -i, --get-interval     Get the current archive interval\n");
+        printf(" -t, --get-time         Get weather station time.\n");
+        printf(" -s, --set-time         Set weather station time to system time.\n");
+        printf(" -o, --bklite-on        Turn backlite on.\n");
+        printf(" -f, --bklite-off       Turn backlite off.\n");
+        printf(" -r, --version          Query for Davis firmware version string.\n");
+        printf(" -m, --model            Query for weather station model name.\n");
+        printf(" -d, --delay=num        Cmd Delay in 1/10ths seconds. Default is 10 (1 sec).\n");
+        printf(" -v, --verbose          Verbose mode.\n");
+        printf(" Device                 Serial Device. Required parameter.\n");
         printf("\n");
         printf("Examples:\n");
         printf("vproweather --get-realtime /dev/ttyp0 > rtwdata.txt\n");
@@ -243,7 +258,7 @@ int main(int argc, char *argv[])
 
     /* Get weather station archive interval */
     if (bGetInterval) {
-        if (runCommand("EEBRD 2D 01\n", 3, "archive interval")) {
+        if (runCommand("EEBRD 2D 01\n", 1, "archive interval",true, true)) {
           exit(2);
         }
 
@@ -252,7 +267,7 @@ int main(int argc, char *argv[])
 
     /* Get weather station time */
     if(bGetTime) {
-        if (runCommand("GETTIME\n", 8, "time")) {
+        if (runCommand("GETTIME\n", 6, "time", true, true)) {
           exit(2);
         }
 
@@ -315,7 +330,7 @@ int main(int argc, char *argv[])
 
     /* Get highs/lows data set */
     if(bGetHLD) {
-        if(runCommand("HILOWS\n", 438, "hi/lows")) {
+        if(runCommand("HILOWS\n", 436, "hi/lows", true, true)) {
           exit(2);
         }
 
@@ -327,7 +342,7 @@ int main(int argc, char *argv[])
 
     /* Get Graph data sets */
     if(bGetGD) {
-        if (runCommand("GETEE\n", 4098, "graph")) {
+        if (runCommand("GETEE\n", 4096, "graph", true, true)) {
           exit(2);
         }
 
@@ -339,13 +354,13 @@ int main(int argc, char *argv[])
     /* Get real time data set (Davis LOOP data) */
     if(bGetRTD) {
         /* Get LOOP 1 data */
-        if (runCommand("LOOP 1\n", 99, "real time v1")) {
+        if (runCommand("LOOP 1\n", 99, "real time v1", true, true)) {
           exit(2);
         }
         GetRTData(szSerBuffer);             /* get data to struct */
 
         /* Get LOOP 2 data */
-        if (runCommand("LPS 2 1\n", 99, "real time v2")) {
+        if (runCommand("LPS 2 1\n", 99, "real time v2", true, true)) {
           gotV2Data = false;
         } else {
           GetRT2Data(szSerBuffer);             /* get data to struct */
@@ -354,12 +369,50 @@ int main(int argc, char *argv[])
         PrintRTData(gotV2Data);                      /* ...and to stdout */
     }
 
+
+
+    if (bArchive) {
+      if (runCommand("DMPAFT\n", 0, "archive download initiation", true, false)) {
+        exit(2);
+      }
+
+      if (runCommand(datetimeString, 4, "archive download initiation", true, true)) {
+        exit(2);
+      } else {
+        if (bVerbose) {
+          StoreDownloadInfo(szSerBuffer);
+          PrintDownloadInfo();
+        }
+      }
+
+      PrintArchHeader();
+
+      nextCommand = ACK_STR;
+      while (errors < 5) {
+        if (runCommand(nextCommand, 267, "archive packet", false, true)) {
+          Delay(1, 0);
+          nextCommand = NAK_STR;
+          errors++;
+        } else {
+          StoreArchPacket(szSerBuffer);
+          PrintArchPacket(0);
+          break;
+        }
+      }
+
+      runCommand(ESC_STR, 0, "Cancel", false, false);
+    }
+
+
+
     /* all done, exit */
     tcsetattr(fdser, TCSANOW, &oldtio); /* restore previous port settings */
     if(close(fdser)) {
         perror("vproweather: Problem closing serial device, check device name.");
         exit(2);
     }
+
+
 
     exit(0);
 }
@@ -377,6 +430,7 @@ int GetParms(int argc, char *argv[])
     extern char *optarg;
     extern int optind, opterr, optopt;
     int c, i;
+    struct tm *archiveTime = malloc(sizeof(struct tm *));
 
      /* options descriptor */
     static struct option longopts[] = {
@@ -387,6 +441,7 @@ int GetParms(int argc, char *argv[])
         { "get-realtime",   no_argument,    0,  'x' },
         { "get-hilo",       no_argument,    0,  'l' },
         { "get-graph",      no_argument,    0,  'g' },
+        { "get-archive",    optional_argument, 0,  'a' },
         { "get-interval",   no_argument,    0,  'i' },
         { "get-time",       no_argument,    0,  't' },
         { "set-time",       no_argument,    0,  's' },
@@ -416,7 +471,7 @@ int GetParms(int argc, char *argv[])
     if(argc == 1)
         return 0;               /* no parms at all */
 
-    while ((c = getopt_long(argc, argv, "ofrmxlgivtsb:d:", longopts, NULL )) != EOF) {
+    while ((c = getopt_long(argc, argv, "ofrmxlga::ivtsb:d:", longopts, NULL )) != EOF) {
         switch (c) {
             case 'o': bBKLOn        = true; break;
             case 'f': bBKLOff       = true; break;
@@ -429,6 +484,29 @@ int GetParms(int argc, char *argv[])
             case 'v': bVerbose      = true; break;
             case 't': bGetTime      = true; break;
             case 's': bSetTime      = true; break;
+
+            case 'a':
+                bArchive = true;
+                if (optarg == NULL) {
+                  archiveRecords = 0;
+                } else {
+                  // Try and parse a full date time string
+                  if (strptime(optarg, "%Y-%m-%dT%H:%M", archiveTime) == NULL
+                      && strptime(optarg, "%Y-%m-%d", archiveTime) == NULL) {
+                    archiveTime = NULL;
+                    /*XXX curTime = 1483228800;
+                    archiveTime = localtime(&curTime);*/
+                    archiveRecords = atoi(optarg);
+                  }
+
+                  MakeVantageDatetime(archiveTime, datetimeString);
+                  GenerateCRC(4, datetimeString, &datetimeString[4]);
+                }
+                /*if (archiveRecords < -1) {
+                  fprintf(stderr, "vproweather: Illegal number of archive records to download specified.\n");
+                  return 0;
+                }*/
+                break;
 
             case 'd':
                 /* Get delay time */
@@ -558,7 +636,8 @@ int ReadToBuffer(int nfd, char *pszBuffer, int nBufSize)
     Run a command and check CRC of the reply. If the command is run
     successfully and the data of the CRC passes, returns 0, otherwise -1
 ----------------------------------------------------------------------------*/
-int runCommand(char* command, int expectedLength, char* dataLabel)
+int runCommand(char* command, int expectedLength, char* dataLabel,
+        bool expectingAck, bool expectingCrc)
 {
     int16_t nCnt;
 
@@ -576,33 +655,61 @@ int runCommand(char* command, int expectedLength, char* dataLabel)
     tcdrain(fdser);
     nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
 
+    if (expectingCrc) {
+      expectedLength = expectedLength + 2;
+    }
+    if (expectingAck) {
+      expectedLength = expectedLength + 1;
+    }
+
+    if (bVerbose) {
+      int i = 0;
+      int max;
+
+      if (expectedLength > 20) {
+        max = 20;
+      } else {
+        max = expectedLength;
+      }
+
+      for (i = 0; i < max; i++) {
+        printf("%02x  ", (uint8_t)szSerBuffer[i]);
+      }
+      printf("\n");
+    }
+
     /* Check received an ACK */
-    if (szSerBuffer[0] != ACK) {
-      printf("Didn't get ACK from weather station\n");
-      return -1;
-    } else if (bVerbose) {
-      printf("Get ACK reply to command\n");
+    if (expectingAck) {
+        if (szSerBuffer[0] != ACK) {
+          printf("Didn't get ACK from weather station\n");
+          return -1;
+        } else if (bVerbose) {
+          printf("Get ACK reply to command\n");
+        }
     }
 
     if(bVerbose) {
-        printf("Got %d characters...", nCnt);
-        if(nCnt != (expectedLength + 1))
+        printf("Got %d of %d characters...", nCnt, expectedLength);
+        if(nCnt != expectedLength)
             printf("Bad\n");
         else
             printf("Good\n");
     }
-    if(nCnt != (expectedLength + 1)) {
+    if(nCnt != expectedLength) {
         fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
         return -1;
         exit(2);
     }
-    if((nCnt = CheckCRC(expectedLength, szSerBuffer+1))) {    /* check crc */
-        fprintf(stderr, "vproweather: CRC failure %d.\n", nCnt);
-        return -1;
-        exit(2);
+    if (expectingCrc) {
+        if((nCnt = CheckCRC(expectedLength,
+                szSerBuffer + (expectingAck ? 1 : 0)))) {    /* check crc */
+            fprintf(stderr, "vproweather: CRC failure %d.\n", nCnt);
+            return -1;
+            exit(2);
+        }
+        else if (bVerbose)
+            printf("CRC verified good on full %s packet.\n", dataLabel);
     }
-    else if (bVerbose)
-        printf("CRC verified good on full %s packet.\n", dataLabel);
 
     return 0;
 }

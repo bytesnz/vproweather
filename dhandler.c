@@ -27,6 +27,7 @@
 #include "dhandler.h"
 #include "main.h"
 #include "names.h"
+#include "byte.h"
 
 
 /* CCITT table of CRC values */
@@ -268,6 +269,8 @@ static char szForeStrings[] =
 static RTDATA rcd;          /* the one and only v1 real time weather packet */
 static RTDATA2 rcd2;          /* the one and only v2 real time weather packet */
 static HLDATA hld;          /* the one and only highs/lows packet */
+static ARCHINFO arcInfo;    /* archive download info packet */
+static ARCHDOWNLOAD arcPacket;
 
 /* local functions */
 static char* TimeConvert(uint16_t wTime);
@@ -305,6 +308,43 @@ int CheckCRC(int nCnt, char *pData)
 
 
 
+/*--------------------------------------------------------------------------
+    GenerateCRC
+    Generate the two byte CRC string of a string to pass to the Vantage when
+    sending data to it.
+----------------------------------------------------------------------------*/
+void GenerateCRC(int nCnt, char *pData, char *crc)
+{
+  uint16_t value = CheckCRC(nCnt, pData);
+  crc[0] = HIBYTE(value);
+  crc[1] = LOBYTE(value);
+  crc[2] = 0;
+}
+
+
+/*--------------------------------------------------------------------------
+    MakeVantageDatetim
+    Creates a Vantage Datetime uint16_t[2] from the given time struct
+    [ day + month*32 + (year-2000)*512, 100*hours + minutes ]
+----------------------------------------------------------------------------*/
+void MakeVantageDatetime(struct tm* time, char *datetimeString)
+{
+  uint16_t value = 0;
+
+  if (time != NULL) {
+    // Calculate date portion
+    value = time->tm_mday + ((time->tm_mon + 1) * 32) + ((time->tm_year - 100) * 512);
+    datetimeString[1] = HIBYTE(value);
+    datetimeString[0] = LOBYTE(value);
+
+    //Calculate time portion
+    value = time->tm_min + (100 * time->tm_hour);
+    datetimeString[3] = HIBYTE(value);
+    datetimeString[2] = LOBYTE(value);
+
+    datetimeString[4] = 0;
+  }
+}
 
 /*--------------------------------------------------------------------------
     PrintTime
@@ -334,6 +374,28 @@ void PrintTime(char *szData)
     printf("DavisTime = %s", szBuf);
 }
 
+
+
+
+/*--------------------------------------------------------------------------
+    StoreArchPacket
+    Copies the Archive download packet to the static ARCHDOWNLOAD struct.
+----------------------------------------------------------------------------*/
+void StoreArchPacket(char *szData)
+{
+    memcpy((char*)&arcPacket, szData, sizeof(ARCHDOWNLOAD));
+}
+
+
+
+/*--------------------------------------------------------------------------
+    StoreDownloadInfo
+    Copies the Archive download info to the static ARCHINFO struct.
+----------------------------------------------------------------------------*/
+void StoreDownloadInfo(char *szData)
+{
+    memcpy((char*)&arcInfo, szData, sizeof(ARCHINFO));
+}
 
 
 
@@ -1328,6 +1390,114 @@ void PrintTimeRef(void)
 
 }
 
+
+/*--------------------------------------------------------------------------
+    PrintDownloadInfo
+    Prints how many racords will be downloaded to stdout
+----------------------------------------------------------------------------*/
+void PrintDownloadInfo(void)
+{
+  printf("%d pages of records will be sent\n", arcInfo.numberOfPages);
+}
+
+
+
+/*--------------------------------------------------------------------------
+    PrintArchHeader
+    Prints the header for the archive records to stdout
+----------------------------------------------------------------------------*/
+void PrintArchHeader(void)
+{
+  printf("date,time,");
+  // Temperatures
+  printf("outside temp,outside temp high, outside temp low,insideTemp,");
+  printf("extra temp1, extra temp2, extra temp3,");
+  // Humidity
+  printf("inside humidity,outside humidity,");
+  printf("extra humidity 1,extra humidity 2,");
+  // Rainfall
+  printf("rainfall,highest rain ");
+  // Barometer and forecast
+  printf("barometer,forecast at end of period,");
+  // Wind speed
+  printf("number of wind samples,");
+  printf("average wind speed,,prevailing wind direction,prevailing wind rose,");
+  printf("highest wind speed,highest wind direction,higest wind rose,");
+  // Radiation
+  printf("average solar radiation,maximum solar radiation,");
+  printf("average uv index,max uv,accumulated et,");
+  // Leaf
+  printf("leaf temp 1,leaf temp 2,leaf wetness 1,leaf wetness 2,");
+  // Soil
+  printf("soil temp 1,soil temp 2,soil temp 3,soil temp 4,");
+  printf("soil moisture 1,soil moisture 2, soil moisture 3, soil moisture 4\n");
+}
+
+
+
+/*--------------------------------------------------------------------------
+    PrintArchPacket
+    Dumps the archivepacket records to stdout.
+----------------------------------------------------------------------------*/
+void PrintArchPacket(void)
+{
+  int i;
+  ARCDATAB *record;
+
+  printf("Sequence number: %d\n", arcPacket.seqNumber);
+
+  for (i = 0; i < 5; i++) {
+    record = &arcPacket.records[i];
+
+    // Date and time
+    printf("%d-%d-%d,", DATESTAMP_YEAR(record->date),
+          DATESTAMP_MONTH(record->date), DATESTAMP_DAY(record->date));
+    printf("%d:%d,", TIMESTAMP_HOUR(record->time), TIMESTAMP_MINUTE(record->time));
+
+    // Outside/Inside temperatures
+    printf("%0.1f,%0.1f,%0.1f,%0.1f", TEMP(record->outsideTemp),
+          TEMP(record->outsideHighTemp), TEMP(record->outsideLowTemp),
+          TEMP(record->insideTemp));
+
+    // Extra temperatures
+    printf("%d,%d,%d,", ROUGH_TEMP(record->extraTemps[0]),
+            ROUGH_TEMP(record->extraTemps[1]),
+            ROUGH_TEMP(record->extraTemps[2]));
+
+
+    // Humidity
+    printf("%d,%d,%d,%d,", record->outsideHum, record->insideHum,
+            record->extraHums[0], record->extraHums[1]);
+
+    // Rainfall
+    printf("%d,%d,", record->rainfall, record->highestRainRate);
+
+    // Barometer and forecast
+    printf("%d,%s", record->barometer, ForecastString(record->forecastRule));
+
+    // Wind speed
+    printf("%d,%d,%s,%d,%d,%s,", record->windSamples,
+            record->prevailWindDir, getWindRose(record->prevailWindDir),
+            record->highestWindSpd, record->highestWindDir,
+            getWindRose(record->highestWindDir));
+
+    // Radiation
+      printf("%d,%d,%d,%d,%d", record->avgSolarRad, record->solarRadMax,
+            record->avgUvIndex, record->uvMax, record->etAccumulated);
+
+    // Leaf
+    printf("%d,%d,%d,%d,", ROUGH_TEMP(record->leafTemps[0]),
+            ROUGH_TEMP(record->leafTemps[1]), record->leafWetness[0],
+            record->leafWetness[1]);
+
+    //Soil
+    printf("%d,%d,%d,%d,%d,%d,%d,%d,", ROUGH_TEMP(record->soilTemps[0]),
+            ROUGH_TEMP(record->soilTemps[1]), ROUGH_TEMP(record->soilTemps[2]),
+            ROUGH_TEMP(record->soilTemps[3]), record->soilMoisture[0],
+            record->soilMoisture[1], record->soilMoisture[2],
+            record->soilMoisture[3]);
+  }
+}
 
 /*--------------------------------------------------------------------------
     ForecastString

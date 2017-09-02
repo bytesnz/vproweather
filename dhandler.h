@@ -23,6 +23,7 @@
 #define __DHANDLER_H__
 
 #include "main.h"
+#include <time.h>
 
 #ifdef __cplusplus
 #define extern "C" {        /* respect c++ callers */
@@ -30,6 +31,8 @@
 
 /* exports */
 extern int CheckCRC(int nCnt, char *pData);
+extern void GenerateCRC(int nCnt, char *pData, char *crc);
+extern void MakeVantageDatetime(struct tm *time, char* datetimestring);
 extern void GetRTData(char *szData);
 extern void GetRT2Data(char *szData);
 extern void GetHLData(char *szData);
@@ -37,6 +40,11 @@ extern void PrintRTData(bool includeLoop2Data);
 extern void PrintHLData(void);
 extern void PrintGDData(uint8_t * pData);
 extern void PrintTime(char *szData);
+extern void PrintDownloadInfo(void);
+extern void StoreDownloadInfo(char* szData);
+extern void PrintArchHeader(void);
+extern void StoreArchPacket(char* szData);
+extern void PrintArchPacket(int maxArcRecords);
 
 extern char* ForecastString(uint16_t wRule);
 
@@ -224,6 +232,14 @@ extern char* ForecastString(uint16_t wRule);
 #define LCD_MODEL_COMP               SAVE_HOUR+9
 #define LOG_AVERAGE_TEMPS            SAVE_HOUR+11            // MUST BE AT 4092
 
+#define TEMP(t) (t / 10.0)
+#define ROUGH_TEMP(t) (t - 90)
+
+#define DATESTAMP_DAY(d) (d & 0x001f)
+#define DATESTAMP_MONTH(d) ((d & 0x01e0) / 32)
+#define DATESTAMP_YEAR(d) ((d & 0xfe00) / 512)
+#define TIMESTAMP_HOUR(t) (t / 100)
+#define TIMESTAMP_MINUTE(t) (t % 100)
 
 /* Definition of Davis LOOP data packet */
 typedef struct t_RTDATA
@@ -462,6 +478,68 @@ typedef struct t_EEDATA
     uint8_t szDumm[177];    /* stuff not used in this version       */
 
 } PACKED EEDATA;
+
+
+/* Definition of Davis revision B archive packet 52 bytes long */
+typedef struct t_ARCDATAB
+{
+    uint16_t date;           /* 0 16-bit date stamp YYYYYYYMMMMDDDDD         */
+                             /* day + month*32 + (year-2000)*512             */
+    uint16_t time;           /* 2 Timestamp HHMM                             */
+    int16_t  outsideTemp;    /* 4 Outside avg/final temperature degF/10      */
+    int16_t  outsideHighTemp;/* 6 Highest outside temp for archive period    */
+    int16_t  outsideLowTemp; /* 8 Lowest outside temp for archive period     */
+    uint16_t rainfall;       /* 10 Number of rainfall clicks over period     */
+    uint16_t highestRainRate;/* 12 Highest rainfall rate over period clks/hr */
+    uint16_t barometer;      /* 14 Barometer reading at end (Hg / 1000)      */
+    uint16_t avgSolarRad;    /* 16 Average solar radiation (W/m^2)           */
+    uint16_t windSamples;    /* 18 Number of wind samples                    */
+    int16_t  insideTemp;     /* 20 Inside avg/final temperature degF/10      */
+    uint8_t  insideHum;      /* 22 Inside humidity at end of period          */
+    uint8_t  outsideHum;     /* 23 Outside humidity at end of period         */
+    uint8_t  avgWindSpd;     /* 24 Average wind speed over period            */
+    uint8_t  highestWindSpd; /* 25 Highest wind speed over period            */
+    uint8_t  highestWindDir; /* 26 Direction of highest wind speed in period */
+    uint8_t  prevailWindDir;  /* 27 Direction of prevailing wind over period  */
+    uint8_t  avgUvIndex;     /* 28 Average UV Index (UV Index / 10)          */
+    uint8_t  etAccumulated;  /* 29 Accumulated ET over last hour (in / 1000) */
+                             /*    Only records "on the hour" will have      */
+                             /*    non-zero value                            */
+    uint16_t solarRadMax;    /* 30 Solar radiation maximum in period (W/m^2) */
+    uint8_t  uvMax;          /* 32 UV maximum in period (W/m^2)              */
+    uint8_t  forecastRule;   /* 33 Forcast rule at end of period             */
+    uint8_t  leafTemps[2];   /* 34 2 leaf temperatures (defF + 90)           */
+    uint8_t  leafWetness[2]; /* 36 2 leaf wetness (0-15)                     */
+    uint8_t  soilTemps[4];   /* 38 4 soil temperatures (degF + 90)           */
+    uint8_t  recordType;     /* 42 Record type 0xFF = Rev A 0x00 = Rev B     */
+    uint8_t  extraHums[2];   /* 43 2 extra humidity values                   */
+    uint8_t  extraTemps[3];  /* 45 3 extra temperatures (degF + 90)          */
+    uint8_t  soilMoisture[4];/* 48 4 soil moisture values (cb)               */
+} PACKED ARCDATAB;
+
+
+/* Definition of Davis archive download information packet, sent after the
+   date and time stamps to download after are sent*/
+typedef struct t_ARCHINFO
+{
+    uint8_t  yACK;           /* -1 ACK from stream                           */
+
+    uint16_t numberOfPages;  /* 0 Number of pages that will be sent if not   */
+                             /*   cancelled                                  */
+    uint16_t firstRecord;    /* 2 Location of first record that will be sent */
+
+    uint16_t WCRC;           /* 4 CRC check bytes (CCIT-16 standard)         */
+} PACKED ARCHINFO;
+
+
+/* Definition of Davis archive download packet */
+typedef struct t_ARCHDOWNLOAD
+{
+    uint8_t  seqNumber;      /* 0 Block sequence number                      */
+    ARCDATAB records[5];     /* 1 Archive records                            */
+    uint8_t  unused[4];      /* 260 Unused bytes                             */
+    uint16_t WCRC;           /* 264 CRC check bytes (CCITT-16 standard)      */
+} PACKED ARCHDOWNLOAD;
 
 
 #ifdef __cplusplus
