@@ -1199,7 +1199,7 @@ void PrintGDData(uint8_t * pData)
  * @param pData Pointer to string containing data items
  * @param nOffset Offset of first data item
  * @param yNext Number of bytes to move for next data item
- * @param nSetSize Number of items in data set
+ * @param nSub Offset value to subtract off value
  */
 void PrintTempSet24(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 {
@@ -1210,9 +1210,9 @@ void PrintTempSet24(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 
     for(i = 0; i < 24; i++) {           /* get data set in proper order */
         sValue = *(pData + nEntry);
-        if(sValue == 255)
-            sValue = nSub;                  /* force n/a's to zero */
-        printf("%d", sValue - nSub);
+        if(sValue != 255) {                 /* force n/a's to empty values */
+            printf("%d", sValue - nSub);
+        }
         if(++nEntry >= (nOffset + 24))
             nEntry = nOffset;               /* reset to beginning */
         if(i < 23)
@@ -1234,7 +1234,7 @@ void PrintTempSet24(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
  * @param pData Pointer to string containing data items
  * @param nOffset Offset of first data item
  * @param yNext Number of bytes to move for next data item
- * @param nSetSize Number of items in data set
+ * @param nSub Offset value to subtract off value
  */
 void PrintTempSet25(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 {
@@ -1245,13 +1245,13 @@ void PrintTempSet25(uint8_t *pData, int nOffset, uint8_t yNext, int nSub)
 
     for(i = 0; i < 25; i++) {           /* get data set in proper order */
         sValue = *(pData + nEntry);
-        if(sValue == 255)
-            sValue = nSub;                  /* force n/a's to zero */
         if(++nEntry >= (nOffset + 25))
             nEntry = nOffset;               /* reset to beginning */
         else {
-            /* subtract nSub to get temp integer */
-            printf("%d", sValue - nSub);
+            if(sValue != 255) {             /* force n/a's to be empty values */
+              /* subtract nSub to get temp integer */
+              printf("%d", sValue - nSub);
+            }
             if(i < 24)
                 printf(",");                /* no comma on last entry */
         }
@@ -1278,12 +1278,13 @@ void PrintByteSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
     for(i = 0; i < nSetSize; i++) {         /* get data set in proper order */
         yValue = *(pData + nEntry);
-        if(yValue == 255)
-            yValue = 0;                     /* force n/a's to zero */
+            yValue = 0;
         if(++nEntry >= (nOffset + nSetSize)) {
             nEntry = nOffset;               /* reset to beginning */
             if(nSetSize != 25) {
-                printf("%d", yValue);
+                if(yValue != 255) {         /* force n/a's to be empty values */
+                    printf("%d", yValue);
+                }
                 if(i < nSetSize - 1) printf(",");
             }
         }
@@ -1316,9 +1317,9 @@ void PrintTimeSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
     for(i = 0; i < nSetSize; i++) {         /* get data set in proper order */
         wValue = *( (uint16_t*)(pData + nEntry) );
-        if(wValue == 65535)                 /* check for empty entry */
-            wValue = 0;
-        printf("%s", TimeConvert(wValue));
+        if(wValue != 65535) {               /* print blank for empty entry */
+            printf("%s", TimeConvert(wValue));
+        }
         nEntry += 2;
         if(nEntry >= nOffset + (nSetSize*2))
             nEntry = nOffset;               /* reset to beginning */
@@ -1347,12 +1348,13 @@ void PrintBarSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
     for(i = 0; i < nSetSize; i++) {         /* get data set in proper order */
         wValue = *( (uint16_t*)(pData + nEntry) );
-        if(wValue == 65535) wValue = 0;     /* zero out illegal entries */
         nEntry += 2;
         if(nEntry >= nOffset + (nSetSize*2)) {
             nEntry = nOffset;               /* reset to beginning */
             if(nSetSize != 25) {
-                printf("%2.2f", wValue / 1000.0);
+                if(wValue == 65535) {       /* print empty value for illegal entries */
+                    printf("%2.2f", wValue / 1000.0);
+                }
                 if(i < nSetSize - 1) printf(",");
             }
 
@@ -1387,12 +1389,13 @@ void PrintRainRateSet(uint8_t *pData, int nOffset, uint8_t yNext, int nSetSize)
 
     for(i = 0; i < nSetSize; i++) {         /* get data set in proper order */
         wValue = *( (uint16_t*)(pData + nEntry) );
-        if(wValue == 65535) wValue = 0;     /* zero out illegal entries */
         nEntry += 2;
         if(nEntry >= nOffset + (nSetSize*2)) {
             nEntry = nOffset;               /* reset to beginning */
             if(nSetSize != 25) {
-                printf("%.2f", wValue / 100.0);
+                if(wValue == 65535) {     /* print empty value for illegal entries */
+                    printf("%.2f", wValue / 100.0);
+                }
                 if(i < nSetSize - 1) printf(",");
             }
         }
