@@ -5,21 +5,30 @@ Initial version written by Joe Jaworski (http://www.joejaworski.com/weather/)
 Additions made by Jack Farley (https://github.com/bytesnz/wproweather)
 
 ```
+vproweather v0.8.0
+https://github.com/bytesnz/vproweather
+Original work by Joe Jaworski http://www.joejaworski.com/weather/
+
 Usage: vproweather [Options] Device
 Options:
- -x, --get-realtime    Get real time weather data.
- -l, --get-highlow     Get Highs/Lows data.
- -g, --get-graph       Get graph data.
- -i, --get-interval    Get the current archive interval
- -t, --get-time        Get weather station time.
- -s, --set-time        Set weather station time to system time.
- -o, --bklite-on       Turn backlite on.
- -f, --bklite-off      Turn backlite off.
- -r, --version         Query for Davis firmware version string.
- -m, --model           Query for weather station model name.
- -d, --delay=num       Cmd Delay in 1/10ths seconds. Default is 10 (1 sec).
- -v, --verbose         Verbose mode.
- Device                Serial Device. Required parameter.
+ -x, --get-realtime     Get real time weather data.
+ -l, --get-highlow      Get Highs/Lows data.
+ -g, --get-graph        Get graph data.
+ -a, --get-archive=arc  Print either:
+                          - all the archive records (default)
+                          - all the records since arc date
+                            (in yyyy-mm-dd[THH:MM format]
+                          - the last arc records
+ -i, --get-interval     Get the current archive interval
+ -t, --get-time         Get weather station time.
+ -s, --set-time         Set weather station time to system time.
+ -o, --bklite-on        Turn backlite on.
+ -f, --bklite-off       Turn backlite off.
+ -r, --version          Query for Davis firmware version string.
+ -m, --model            Query for weather station model name.
+ -d, --delay=num        Cmd Delay in 1/10ths seconds. Default is 10 (1 sec).
+ -v, --verbose          Verbose mode.
+ Device                 Serial Device. Required parameter.
 
 Examples:
 vproweather --get-realtime /dev/ttyp0 > rtwdata.txt
@@ -30,186 +39,210 @@ Turns the LCD backlite On, illuminating the display.
 
 ## Real Time Example Output
 ```
-rtBaroTrend = n/a-236
-rtBaroTrendImg = baro_none
-rtBaroCurr = 30.00
-rtInsideTemp = 78.2
-rtInsideHum = 64
-rtOutsideTemp = 76.2
-rtWindSpeed = 14
-rtWindAvgSpeed = 16
-rtWindDir = 179
-rtWindDirRose = S
-rtOutsideHum = 67
+rtNextArchiveRecord = 0x0139
+rtBaroTrend = Steady
+rtBaroTrendImg = baro_s
+rtBaroCurr = 30.08
+rtInsideTemp = 80.6
+rtInsideHum = 67
+rtOutsideTemp = 76.9
+rtWindSpeed = 2
+rtWindAvgSpeed = 2.2
+rtWind2mAvgSpeed = 1.8
+rtWindDir = 284
+rtWindDirRose = NNE
+rtWind10mGustMaxSpeed = 5
+rtWind10mGustMaxDir = 267
+rtWind10mGustMaxDirRose = NNW
+rtOutsideHum = 73
 rtRainRate = 0.00
 rtIsRaining = no
-rtUVLevel = 0.9
-rtSolarRad = 323
+rtUVLevel = 0.0
+rtSolarRad = 65
+rtHeatIndex = 19712
+rtWindChill = 20224
+rtThswIndex = 0
 rtRainStorm = 0.00
 rtStormStartDate = n/a
+rt15mRain = 0.00
+rtHourRain = 389.12
 rtDayRain = 0.00
-rtMonthRain = 0.02
+rtMonthRain = 0.00
 rtYearRain = 6.77
-rtDayET = 145
-rtMonthET = 354
+rtDayET = 152
+rtMonthET = 87
 rtXmitBattt = 0
-rtBattVoltage = 4.5
-rtForeIcon = 3
-rtForeRule = 187
-rtForecast = Mostly cloudy and cooler. Precipitation likely, windy with possible wind shift to the W, NW, or N.
-rtSunrise = 6:20AM
-rtSunset = 5:54PM
-
+rtBattVoltage = 4.4
+rtForeIcon = 6
+rtForeRule = 44
+rtForecast = Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.
+rtSunrise = 06:12
+rtSunset = 17:57
 ```
 
 ## His/Lows Example Output
 ```
-hlBaroLoDay = 29.99
-hlBaroHiDay = 30.13
-hlBaroLoMonth = 29.87
-hlBaroHiMonth = 30.18
+hlBaroLoDay = 30.08
+hlBaroHiDay = 30.15
+hlBaroLoMonth = 29.98
+hlBaroHiMonth = 30.23
 hlBaroLoYear = 29.54
-hlBaroHiYear = 30.22
-hlBaroLoTime = 3:49PM
-hlBaroHiTime = 12:13AM
-hlWindHiDay = 32
-hlWindHiTime = 3:33PM
-hlWindHiMonth = 32
+hlBaroHiYear = 30.23
+hlBaroLoTime = 16:15
+hlBaroHiTime = 10:04
+hlWindHiDay = 9
+hlWindHiTime = 12:37
+hlWindHiMonth = 33
 hlWindHiYear = 39
-hlInTempHiDay = 78.4
-hlInTempLoDay = 70.0
-hlInTempHiTime = 2:50PM
-hlInTempLoTime = 7:32AM
-hlInTempLoMonth = 64.3
-hlInTempHiMonth = 95.0
+hlInTempHiDay = 80.6
+hlInTempLoDay = 69.0
+hlInTempHiTime = 17:10
+hlInTempLoTime = 05:30
+hlInTempLoMonth = 69.0
+hlInTempHiMonth = 83.0
 hlInTempLoYear = 64.3
 hlInTempHiYear = 96.0
-hlInHumHiDay = 65
-hlInHumLoDay = 56
-hlInHumHiTime = 3:50PM
-hlInHumLoTime = 12:01AM
-hlInHumHiMonth = 84
-hlInHumLoMonth = 33
+hlInHumHiDay = 75
+hlInHumLoDay = 60
+hlInHumHiTime = 11:51
+hlInHumLoTime = 01:40
+hlInHumHiMonth = 80
+hlInHumLoMonth = 40
 hlInHumHiYear = 87
 hlInHumLoYear = 26
-hlOutTempHiDay = 81.2
-hlOutTempLoDay = 62.8
-hlOutTempHiTime = 11:23AM
-hlOutTempLoTime = 6:32AM
-hlOutTempLoMonth = 59.9
-hlOutTempHiMonth = 92.0
+hlOutTempHiDay = 79.0
+hlOutTempLoDay = 56.6
+hlOutTempHiTime = 13:54
+hlOutTempLoTime = 04:43
+hlOutTempLoMonth = 56.6
+hlOutTempHiMonth = 84.5
 hlOutTempHiYear = 96.0
-hlOutTempLoYear = 59.9
-hlDewLoDay = 53
-hlDewHiDay = 66
-hlDewLoTime = 12:01AM
-hlDewHiTime = 1:47PM
-hlDewHiMonth = 75
-hlDewLoMonth = 47
+hlOutTempLoYear = 56.4
+hlDewLoDay = 48
+hlDewHiDay = 70
+hlDewLoTime = 06:24
+hlDewHiTime = 11:03
+hlDewHiMonth = 71
+hlDewLoMonth = 48
 hlDewHiYear = 83
 hlDewLoYear = 46
-hlChillLoDay = 61
-hlChillLoTime = 5:09AM
-hlChillLoMonth = 58
-hlChillLoYear = 58
+hlChillLoDay = 57
+hlChillLoTime = 04:33
+hlChillLoMonth = 57
+hlChillLoYear = 56
 hlHeatHiDay = 82
-hlHeatHiTime = 11:23AM
-hlHeatHiMonth = 100
+hlHeatHiTime = 13:54
+hlHeatHiMonth = 84
 hlHeatHiYear = 118
-hlSolarHiDay = 93.5
-hlSolarHiTime = 11:56AM
-hlSolarHiMonth = 97.0
+hlSolarHiDay = 84.9
+hlSolarHiTime = 11:57
+hlSolarHiMonth = 85.6
 hlSolarHiYear = 140.3
 hlUVHiDay = 5.1
-hlUVHiTime = 11:37AM
-hlUVHiMonth = 5.7
+hlUVHiTime = 11:35
+hlUVHiMonth = 5.4
 hlUVHiYear = 13.6
 hlRainRateHiDay = 0.00
 hlRainRateHiTime = n/a
 hlRainRateHiHour = 0.00
-hlRainRateHiMonth = 0.01
+hlRainRateHiMonth = 0.00
 hlRainRateHiYear = 5.38
 ```
 
 ## Graph Data Example Output
 ```
-grTimeRef10Min = 12PM,12:10PM,12:20PM,12:30PM,12:40PM,12:50PM,1PM,1:10PM,1:20PM,1:30PM,1:40PM,1:50PM,2PM,2:10PM,2:20PM,2:30PM,2:40PM,2:50PM,3PM,3:10PM,3:20PM,3:30PM,3:40PM,3:50PM
-grTimeRef15Min = 10AM,10:15AM,10:30AM,10:45AM,11AM,11:15AM,11:30AM,11:45AM,12PM,12:15PM,12:30PM,12:45PM,1PM,1:15PM,1:30PM,1:45PM,2PM,2:15PM,2:30PM,2:45PM,3PM,3:15PM,3:30PM,3:45PM
-grTimeRefHours = 4PM,5PM,6PM,7PM,8PM,9PM,10PM,11PM,12AM,1AM,2AM,3AM,4AM,5AM,6AM,7AM,8AM,9AM,10AM,11AM,12PM,1PM,2PM,3PM
-grTimeRefDays = 8/4,8/5,8/6,8/7,8/8,8/9,8/10,8/11,8/12,8/13,8/14,8/15,8/16,8/17,8/18,8/19,8/20,8/21,8/22,8/23,8/24,8/25,8/26,8/27
-grTimeRefMonths = AUG,SEP,OCT,NOV,DEC,JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC,JAN,FEB,MAR,APR,MAY,JUN,JUL
+grTimeRef10Min = 14:50,15:00,15:10,15:20,15:30,15:40,15:50,16:00,16:10,16:20,16:30,16:40,16:50,17:00,17:10,17:20,17:30,17:40,17:50,18:00,18:10,18:20,18:30,18:40
+grTimeRef15Min = 12:45,13:00,13:15,13:30,13:45,14:00,14:15,14:30,14:45,15:00,15:15,15:30,15:45,16:00,16:15,16:30,16:45,17:00,17:15,17:30,17:45,18:00,18:15,18:30
+grTimeRefHours = 19:00,20:00,21:00,22:00,23:00,00:00,01:00,02:00,03:00,04:00,05:00,06:00,07:00,08:00,09:00,10:00,11:00,12:00,13:00,14:00,15:00,16:00,17:00,18:00
+grTimeRefDays = 2017-08-13,2017-08-14,2017-08-15,2017-08-16,2017-08-17,2017-08-18,2017-08-19,2017-08-20,2017-08-21,2017-08-22,2017-08-23,2017-08-24,2017-08-25,2017-08-26,2017-08-27,2017-08-28,2017-08-29,2017-08-30,2017-08-31,2017-09-01,2017-09-02,2017-09-03,2017-09-04,2017-09-05
+grTimeRefMonths = 9,10,11,12,1,2,3,4,5,6,7,8,9,10,11,12,1,2,3,4,5,6,7,8
 grTimeRefYears = 1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016
-grInTempByHours = 76,77,76,75,75,74,73,73,73,72,72,71,71,71,71,70,70,72,73,75,77,78,78,78
-grInTempHiByDays = 93,92,92,89,93,90,91,94,88,89,95,94,80,86,88,84,81,80,79,79,80,80,78,77
-grInTempHiByDaysTime = 4:28AM,4:19AM,4:22AM,3:42AM,3:33AM,1:26AM,1:27AM,1:29AM,2:30AM,12:52AM,1:31AM,1:31AM,1:39AM,11:53PM,12:24AM,12AM,12AM,1:46AM,4:41AM,7:35AM,5PM,5:11PM,5:01PM,5:04PM
-grInTempLoByDays = 70,70,70,69,68,69,69,72,77,73,72,70,68,73,69,71,66,64,70,70,72,70,71,71
-grInTempLoByDaysTime = 11:56PM,12:52AM,1:38AM,11:53PM,11:07PM,10:37PM,10:21PM,12AM,12AM,10:30PM,9:43PM,10:48PM,9:32PM,1:54PM,9:37PM,9:26PM,8:16PM,9:03PM,9:43PM,9:46PM,12AM,7:01AM,7:04AM,7:50AM
-grInTempHiByMonths = 88,80,84,86,90,89,90,92,93,94,89,84,83,83,84,87,87,90,93,94,96,95,92,93
-grInTempLoByMonths = 65,61,64,67,73,69,77,78,80,79,74,69,65,65,65,67,67,76,76,80,79,77,73,66
-grOutTempByHours = 75,74,73,73,72,71,70,68,67,66,65,64,64,64,63,63,68,72,76,80,77,77,77,77
-grOutTempHiByDays = 82,88,83,81,86,80,80,83,92,85,83,81,84,87,89,82,77,77,81,78,78,80,85,80
-grOutTempHiByDaysTime = 5:25AM,7:58AM,9:10AM,5:13AM,5:04AM,6:58AM,4:41AM,2:05AM,6:07AM,12:07AM,2:33AM,6:07AM,11:58PM,11:59PM,12:18AM,12:15AM,4:02AM,1:45AM,1:06AM,4:37AM,3:28AM,10:09AM,12:54PM,11:08AM
-grOutTempLoByDays = 65,65,65,63,63,65,64,72,77,68,67,64,65,72,66,67,60,60,63,62,65,62,61,62
-grOutTempLoByDaysTime = 9:48PM,12:12AM,12AM,9:53PM,12:23AM,10:21PM,9:11PM,8:27PM,10:34PM,10:04PM,8:26PM,10:40PM,7:08PM,2:16PM,9:24PM,8:39PM,9:15PM,9:06PM,4:34PM,7:34PM,11:59PM,2:01AM,5:49AM,5:13AM
-grOutTempHiByMonths = 93,85,90,95,92,103,95,102,95,93,95,87,85,86,89,89,90,90,95,91,96,96,95,93
-grOutTempLoByMonths = 55,50,55,57,64,60,68,69,70,73,63,57,54,53,55,58,61,66,67,71,72,67,66,61
-grDewByHours = 61,62,61,60,57,52,52,52,54,53,54,54,55,56,55,56,59,59,60,59,62,64,65,64
-grDewHiByDays = 69,71,73,75,72,71,69,74,75,73,74,72,70,69,73,73,65,62,67,69,67,65,67,63
-grDewHiByDaysTime = 7:37AM,10:19AM,6:22AM,6:25AM,7:13AM,9:57AM,7:37AM,5:28AM,6:51AM,1:56AM,4:57AM,6:34AM,2:59AM,3:52AM,12:55AM,1:42AM,12AM,8:10AM,5:08AM,2:37AM,1:56AM,5:37PM,1:25PM,12:39PM
-grDewLoByDays = 61,57,59,54,53,55,58,62,63,58,61,63,47,51,59,64,56,52,57,59,61,56,53,51
-grDewLoByDaysTime = 9:15PM,6:48AM,12AM,9:56PM,5:11AM,11:18PM,12:07AM,8:14PM,6:29PM,10:42PM,12AM,7:13PM,10:31PM,12AM,12:02AM,8:46PM,8:45PM,7:29PM,12AM,7:19PM,11:13PM,9:42AM,12:52PM,8:45PM
-grDewHiByMonths = 75,71,73,74,78,80,81,83,82,83,81,74,72,73,73,76,77,79,82,82,83,82,81,76
-grDewLoByMonths = 41,45,42,46,53,45,60,59,63,66,52,42,43,45,43,46,52,59,58,66,62,63,55,46
-grChillLoByHours = 71,70,69,69,70,70,70,68,67,66,65,64,64,63,61,63,63,68,68,75,75,74,73,73
-grChillLoByDays = 65,65,65,63,63,65,64,71,73,68,67,64,65,72,66,67,60,58,63,62,65,62,61,61
-grChillLoByDaysTime = 8:55PM,12AM,12AM,8:40PM,12AM,10:17PM,8:18PM,11:02PM,12AM,9:58PM,8PM,10:31PM,7:08PM,1:37PM,9:21PM,8:39PM,9:02PM,6:44PM,4:27PM,5:43PM,11:56PM,1:48AM,5:46AM,5:38AM
-grChillLoByMonths = 55,50,54,55,64,60,68,69,70,72,63,56,51,52,55,58,61,66,67,70,70,67,62,61
-grHeatHiByHours = 77,76,74,74,72,70,68,67,66,65,65,64,64,65,63,63,68,72,77,80,78,79,79,78
-grHeatHiByDays = 84,89,88,87,86,83,82,86,100,89,89,85,82,87,91,85,78,77,82,80,80,80,86,80
-grHeatHiByDaysTime = 5:25AM,8:23AM,9:06AM,6:35AM,5:13AM,6:39AM,4:31AM,4:34AM,6:08AM,12:11AM,5:03AM,6:06AM,3:01AM,11:32PM,12:46AM,12:18AM,12:16AM,1:22AM,1:06AM,2:38AM,3:28AM,10:01AM,12:55PM,11:03AM
-grHeatHiByMonths = 98,86,92,96,99,107,109,116,111,120,110,89,89,86,87,93,92,101,113,114,118,114,108,98
-grInHumByHours = 60,61,62,62,61,57,55,55,56,57,57,58,59,60,61,62,63,63,62,59,62,63,64,63
-grInHumHiByDays = 83,80,79,81,76,76,75,81,74,70,75,82,79,67,84,83,74,66,79,80,76,70,70,67
-grInHumHiByDaysTime = 2:34AM,2:08AM,10:28PM,1:04PM,12:49PM,12:06PM,11:56PM,9:47AM,7:42AM,10:47AM,11:41PM,11:49PM,2:52PM,2:35AM,10:43PM,7:07PM,9:53PM,10:08PM,11:53PM,12AM,1:50AM,12AM,8:06AM,7:44AM
-grInHumLoByDays = 44,44,50,53,33,46,45,44,54,55,43,46,49,45,43,62,55,45,56,68,65,60,56,55
-grInHumLoByDaysTime = 4:30AM,4:22AM,4:21AM,3:43AM,3:35AM,1:31AM,1:26AM,1:34AM,2:27AM,3:17AM,1:26AM,1:31AM,11:43PM,11:58PM,12:21AM,11:52PM,11:51PM,1:31AM,12:40AM,7:56AM,3:56AM,10:27AM,12:54PM,9:53PM
-grInHumHiByMonths = 81,85,83,86,85,86,84,84,83,87,85,86,82,80,85,88,85,84,85,84,82,82,81,87
-grInHumLoByMonths = 37,45,37,35,44,28,62,42,49,62,45,32,38,34,36,36,50,52,51,55,44,40,38,26
-grOutHumByHours = 62,65,66,65,59,50,53,57,63,64,67,71,73,74,75,77,73,65,58,50,61,63,67,66
-grOutHumHiByDays = 93,91,90,92,89,86,84,88,76,79,89,95,90,68,90,91,87,76,86,90,86,89,89,85
-grOutHumHiByDaysTime = 12:34AM,12AM,9:43PM,5:09PM,2:40PM,12:41PM,2:22PM,9:25AM,7:43AM,4:39PM,5:37PM,9:02PM,3:27PM,4AM,8:53PM,7:35PM,9:24PM,9:25PM,9:25PM,7:38PM,11:57PM,2:06AM,6:04AM,6:39AM
-grOutHumLoByDays = 11:27PM,12:08AM,12:02AM,12:11AM,12:59AM,1:46AM,1:11AM,11:51PM,3:23AM,10:04AM,12:52PM,11:05AM,70:24PM,149:66PM,103:77PM,149:73PM,101:24PM,106:10PM,78:16PM,165:20PM,136:81PM,137:04PM,119PM,149:81PM
-grOutHumLoByDaysTime = 5:24AM,7:36AM,3AM,3:35AM,5:05AM,3:16PM,2:47AM,1:55AM,6:01AM,12AM,12:04AM,2:01AM,11:27PM,12:08AM,12:02AM,12:11AM,12:59AM,1:46AM,1:11AM,11:51PM,3:23AM,10:04AM,12:52PM,11:05AM
-grOutHumHiByMonths = 95,97,97,94,96,96,95,93,93,97,96,96,96,94,95,95,95,95,93,95,95,94,93,94
-grOutHumLoByMonths = 23,30,24,20,33,16,40,32,40,52,27,27,30,24,22,25,28,42,39,53,37,36,28,23
-grBarBy15Min = 30.05,30.04,30.04,30.03,30.02,30.02,30.02,30.01,30.01,30.01,30.00,30.00,30.00,30.00,30.00,30.10,30.10,30.09,30.09,30.08,30.07,30.07,30.06,30.05
-grBarByHours = 30.05,30.05,30.06,30.06,30.08,30.11,30.11,30.12,30.13,30.12,30.10,30.10,30.09,30.10,30.10,30.12,30.12,30.11,30.10,30.08,30.05,30.03,30.01,30.00
-grBarHiByDays = 30.13,30.12,30.08,30.10,30.14,30.10,30.13,30.13,30.13,30.10,30.11,30.09,30.04,30.03,30.11,30.18,30.18,30.17,30.00,30.00,30.06,30.11,30.15,30.15
-grBarHiByDaysTime = 5:06PM,3:05AM,4:48AM,2:57AM,2:21AM,1:21AM,11:58PM,1:10AM,1:18AM,1:18AM,12:13AM,12:26AM,12:39AM,11:54PM,11:27PM,11:59PM,12:02AM,12:06AM,12AM,1:39PM,10:53PM,11:57PM,8:18AM,9:27AM
-grBarLoByDays = 30.05,30.01,30.01,30.03,30.05,30.00,29.98,30.05,30.00,30.03,29.99,29.99,29.95,29.92,29.99,30.06,30.10,30.00,29.87,29.92,29.94,30.00,30.02,30.04
-grBarLoByDaysTime = 9:44AM,10:26AM,8:40AM,7:55AM,11:07PM,6:50AM,6:10AM,5:35AM,6:53AM,8:16AM,6:34AM,6:02AM,5:45AM,5:08AM,5:36AM,5:40AM,4:37AM,11:31PM,8:10PM,5:25AM,2:49PM,2:39PM,3:40PM,3:27PM
-grBarHiByMonths = 30.28,30.29,30.33,30.29,30.14,30.23,30.00,29.97,30.02,30.03,30.10,30.32,30.39,30.30,30.31,30.32,30.12,30.11,30.04,30.01,29.99,30.02,30.12,30.22
-grBarLoByMonths = 29.83,29.94,29.97,29.86,29.86,29.73,29.73,29.71,29.67,29.75,29.81,29.88,30.02,29.96,29.95,29.90,29.81,29.78,29.75,29.74,29.70,29.54,29.86,29.90
-grWindAvgBy10Min = 12,12,11,13,12,12,14,14,15,15,15,16,15,16,16,17,16,16,17,17,16,18,15,11
-grWindAvgByHours = 14,15,15,12,8,5,3,2,1,2,1,1,3,6,6,1,1,5,10,5,7,12,15,16
-grWindHiByDays = 25,29,10,12,20,11,13,27,29,11,10,14,11,14,13,15,23,26,18,19,12,19,29,30
-grWindHiByDaysTime = 10:13AM,7:03AM,5:17AM,9:16AM,7:21AM,8:21AM,6:49AM,11:01PM,12:11AM,3:10AM,5:12AM,7:02AM,10:33PM,5:41PM,4:31AM,10:20AM,6AM,3:26AM,10:27PM,1:30AM,3:40AM,4:29PM,3:51PM,5:51PM
-grWindHiByMonths = 32,32,29,32,29,33,37,35,28,33,27,41,39,33,32,30,30,36,29,39,25,32,31,28
-grWindHiByYears = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,44,41
-grWindDirByHours = 5,5,5,5,5,5,4,4,5,5,3,3,3,3,3,3,5,3,3,3,5,5,5,5
-grWindDirByDays = 5,3,6,5,5,6,3,5,3,5,6,5,6,2,2,6,5,5,1,2,6,5,5,5
-grWindDirByMonths = 3,3,3,5,5,5,5,5,5,6,5,3,3,3,5,5,5,5,5,5,2,5,3,5
-grRainRateByMinutes = 327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
-grRainRateByHours = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00
-grRainRateHiByDays = 327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.70,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
-grRainRateHiByDaysTime = 12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,6PM,12AM,12AM,12AM,12AM,12AM,12AM,12AM,12AM
-grRainRateHiByMonths = 334.50,340.34,340.48,327.68,328.78,340.62,339.56,327.70,333.16,342.84,327.70,327.92,328.20,328.86,327.68,327.68,341.72,334.16,335.36,334.88,338.44,331.70,335.12,334.42
-grRainRateHiByYears = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,492.26,342.84
-grRainByHour = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00
+grInTempByHours = 78,77,76,75,74,73,72,71,70,70,69,69,69,69,72,74,76,77,78,78,79,79,80,79
+grInTempHiByDays = 89,95,94,80,86,88,84,81,80,79,79,80,80,78,77,79,81,82,80,80,77,79,83,83
+grInTempHiByDaysTime = 00:52,01:31,01:31,01:39,23:53,00:24,00:00,00:00,01:46,04:41,07:35,17:00,17:11,17:01,17:04,17:01,17:16,17:17,17:14,17:08,14:21,17:35,16:51,13:38
+grInTempLoByDays = 73,72,70,68,73,69,71,66,64,70,70,72,70,71,71,70,70,71,70,70,72,72,69,70
+grInTempLoByDaysTime = 22:30,21:43,22:48,21:32,13:54,21:37,21:26,20:16,21:03,21:43,21:46,00:00,07:01,07:04,07:50,07:32,07:29,06:59,07:16,07:24,05:22,07:28,07:11,06:57
+grInTempHiByMonths = 80,84,86,90,89,90,92,93,94,89,84,83,83,84,87,87,90,93,94,96,95,92,93,95
+grInTempLoByMonths = 61,64,67,73,69,77,78,80,79,74,69,65,65,65,67,67,76,76,80,79,77,73,66,64
+grOutTempByHours = 74,70,67,67,66,63,60,58,61,61,57,59,62,73,76,76,78,78,78,79,78,78,77,75
+grOutTempHiByDays = 85,83,81,84,87,89,82,77,77,81,78,78,80,85,80,81,85,81,82,78,78,77,85,82
+grOutTempHiByDaysTime = 00:07,02:33,06:07,23:58,23:59,00:18,00:15,04:02,01:45,01:06,04:37,03:28,10:09,12:54,11:08,11:23,12:24,13:45,10:13,14:04,12:44,15:21,14:02,13:50
+grOutTempLoByDays = 68,67,64,65,72,66,67,60,60,63,62,65,62,61,62,63,63,62,56,60,64,65,59,62
+grOutTempLoByDaysTime = 22:04,20:26,22:40,19:08,14:16,21:24,20:39,21:15,21:06,16:34,19:34,23:59,02:01,05:49,05:13,06:32,03:10,06:10,06:13,05:11,02:24,23:59,05:47,05:42
+grOutTempHiByMonths = 85,90,95,92,103,95,102,95,93,95,87,85,86,89,89,90,90,95,91,96,96,95,93,92
+grOutTempLoByMonths = 50,55,57,64,60,68,69,70,73,63,57,54,53,55,58,61,66,67,71,72,67,66,61,56
+grDewByHours = 67,64,62,62,62,59,56,53,58,57,53,50,49,55,62,65,69,70,66,68,68,68,67,67
+grDewHiByDays = 73,74,72,70,69,73,73,65,62,67,69,67,65,67,63,67,69,68,67,70,71,66,66,69
+grDewHiByDaysTime = 01:56,04:57,06:34,02:59,03:52,00:55,01:42,00:00,08:10,05:08,02:37,01:56,17:37,13:25,12:39,17:43,18:06,14:44,16:22,15:50,12:08,07:39,17:35,11:43
+grDewLoByDays = 58,61,63,47,51,59,64,56,52,57,59,61,56,53,51,52,53,55,53,54,62,57,48,49
+grDewLoByDaysTime = 22:42,00:00,19:13,22:31,00:00,00:02,20:46,20:45,19:29,00:00,19:19,23:13,09:42,12:52,20:45,21:26,00:00,05:19,04:20,05:02,02:10,22:15,14:04,09:06
+grDewHiByMonths = 71,73,74,78,80,81,83,82,83,81,74,72,73,73,76,77,79,82,82,83,82,81,76,75
+grDewLoByMonths = 45,42,46,53,45,60,59,63,66,52,42,43,45,43,46,52,59,58,66,62,63,55,46,47
+grChillLoByHours = 74,70,67,67,66,63,60,58,58,60,57,57,59,62,73,75,75,78,76,78,78,78,77,75
+grChillLoByDays = 68,67,64,65,72,66,67,60,58,63,62,65,62,61,61,61,63,62,56,60,64,65,59,62
+grChillLoByDaysTime = 21:58,20:00,22:31,19:08,13:37,21:21,20:39,21:02,18:44,16:27,17:43,23:56,01:48,05:46,05:38,05:09,02:46,06:04,06:13,04:59,02:13,23:39,05:12,04:38
+grChillLoByMonths = 50,54,55,64,60,68,69,70,72,63,56,51,52,55,58,61,66,67,70,70,67,62,61,56
+grHeatHiByHours = 76,71,69,68,67,64,60,58,61,61,57,58,62,73,77,78,80,81,80,81,80,80,79,78
+grHeatHiByDays = 89,89,85,82,87,91,85,78,77,82,80,80,80,86,80,82,86,83,82,80,81,79,84,84
+grHeatHiByDaysTime = 00:11,05:03,06:06,03:01,23:32,00:46,00:18,00:16,01:22,01:06,02:38,03:28,10:01,12:55,11:03,11:23,12:25,13:45,10:15,13:52,12:14,14:25,14:19,11:46
+grHeatHiByMonths = 86,92,96,99,107,109,116,111,120,110,89,89,86,87,93,92,101,113,114,118,114,108,98,100
+grInHumByHours = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grInHumHiByDays = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grInHumHiByDaysTime = 10:47,23:41,23:49,14:52,02:35,22:43,19:07,21:53,22:08,23:53,00:00,01:50,00:00,08:06,07:44,18:00,19:01,20:22,00:00,21:33,12:39,00:00,07:37,11:48
+grInHumLoByDays = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grInHumLoByDaysTime = 03:17,01:26,01:31,23:43,23:58,00:21,23:52,23:51,01:31,00:40,07:56,03:56,10:27,12:54,21:53,22:28,12:40,00:00,10:14,09:32,03:00,20:46,14:19,13:44
+grInHumHiByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grInHumLoByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grOutHumByHours = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grOutHumHiByDays = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grOutHumHiByDaysTime = 16:39,17:37,21:02,15:27,04:00,20:53,19:35,21:24,21:25,21:25,19:38,23:57,02:06,06:04,06:39,06:38,18:34,21:19,06:36,23:44,03:25,07:13,06:02,22:50
+grOutHumLoByDays = 10:04,12:52,11:05,82:24,161:66,115:77,161:73,113:24,118:10,97:75,102:90,192:60,72:33,130:89,161:81,23:27,00:08,00:02,00:11,00:59,01:46,01:11,23:51,03:23
+grOutHumLoByDaysTime = 00:00,00:04,02:01,23:27,00:08,00:02,00:11,00:59,01:46,01:11,23:51,03:23,10:04,12:52,11:05,11:23,12:44,08:39,10:10,09:32,18:29,20:02,14:04,09:07
+grOutHumHiByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grOutHumLoByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grBarBy15Min = 30.09,30.09,30.11,30.11,30.10,,30.10,30.09,30.09,30.09,30.08,30.09,30.08,30.08,30.08,30.08,30.08,30.08,30.08,30.08,30.08,30.08,30.09,30.09
+grBarByHours = 30.13,30.13,30.14,30.14,30.13,30.12,30.12,30.11,,30.10,30.11,30.12,30.13,30.14,30.14,30.15,30.14,30.12,30.11,30.09,30.09,30.08,30.08,30.09
+grBarHiByDays = 30.10,30.11,,30.04,30.03,30.11,30.18,30.18,30.17,30.00,30.00,30.06,30.11,30.15,30.15,30.13,30.07,30.08,30.10,30.09,30.05,30.18,30.23,30.21
+grBarHiByDaysTime = 01:18,00:13,00:26,00:39,23:54,23:27,23:59,00:02,00:06,00:00,13:39,22:53,23:57,08:18,09:27,00:13,08:13,21:04,08:36,08:53,09:07,23:25,08:59,00:02
+grBarLoByDays = 30.03,29.99,,29.95,29.92,29.99,30.06,30.10,30.00,29.87,29.92,29.94,30.00,30.02,30.04,29.98,29.93,29.97,30.01,29.98,29.98,30.01,30.12,30.08
+grBarLoByDaysTime = 08:16,06:34,06:02,05:45,05:08,05:36,05:40,04:37,23:31,20:10,05:25,14:49,14:39,15:40,15:27,17:56,15:47,03:08,14:13,16:25,14:18,03:05,14:05,15:15
+grBarHiByMonths = 30.29,30.33,30.29,30.14,30.23,30.00,29.97,30.02,30.03,30.10,30.32,30.39,30.30,30.31,30.32,30.12,30.11,30.04,30.01,29.99,30.02,30.12,30.22,30.18
+grBarLoByMonths = 29.94,29.97,29.86,29.86,29.73,29.73,29.71,29.67,29.75,29.81,29.88,30.02,29.96,29.95,29.90,29.81,29.78,29.75,29.74,29.70,29.54,29.86,29.90,29.87
+grWindAvgBy10Min = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindAvgByHours = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindHiByDays = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindHiByDaysTime = 03:10,05:12,07:02,22:33,17:41,04:31,10:20,06:00,03:26,22:27,01:30,03:40,16:29,15:51,17:51,15:59,14:18,00:20,12:42,10:08,13:39,17:32,16:34,14:52
+grWindHiByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindHiByYears = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindDirByHours = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindDirByDays = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grWindDirByMonths = 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+grRainRateByMinutes = 327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
+grRainRateByHours = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00
+grRainRateHiByDays = 327.68,327.68,,327.68,327.68,327.68,327.70,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
+grRainRateHiByDaysTime = ,,,,,,18:00,,,,,,,,,,,,,,,,,
+grRainRateHiByMonths = 340.34,340.48,327.68,328.78,340.62,339.56,327.70,333.16,342.84,327.70,327.92,328.20,328.86,327.68,327.68,341.72,334.16,335.36,334.88,338.44,331.70,335.12,334.42,327.70
+grRainRateHiByYears = 655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,492.26,342.84
+grRainByHour = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00
 grRainStorms = 327.84,327.82,327.72,327.82,327.80,327.76,331.80,327.80,328.20,329.76,327.92,327.98,329.44,329.06,332.04,328.38,328.22,328.10,327.90,327.72,328.00,327.74,328.16,327.72
-grRainStormsStartDate = 01-JUN-2016,02-JUN-2016,06-JUN-2016,14-JUN-2016,22-JUL-2016,30-JUL-2016,01-OCT-2016,06-OCT-2016,18-NOV-2016,20-DEC-2016,03-JAN-2017,04-JAN-2017,06-JAN-2017,10-JAN-2017,11-FEB-2017,22-FEB-2017,10-MAR-2017,18-MAR-2017,26-MAR-2017,02-APR-2017,22-APR-2017,14-MAY-2017,17-MAY-2017,16-JUN-2017
-grRainStormsEndDate = 01-JUN-2016,02-JUN-2016,06-JUN-2016,14-JUN-2016,23-JUL-2016,30-JUL-2016,01-OCT-2016,06-OCT-2016,18-NOV-2016,21-DEC-2016,03-JAN-2017,04-JAN-2017,06-JAN-2017,10-JAN-2017,12-FEB-2017,23-FEB-2017,10-MAR-2017,18-MAR-2017,26-MAR-2017,02-APR-2017,22-APR-2017,14-MAY-2017,18-MAY-2017,16-JUN-2017
-grRainByDay = 327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.72,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
-grRainByMonth = 327.84,328.12,328.56,327.68,328.22,331.94,330.86,327.70,328.26,348.76,327.70,327.80,328.22,327.88,327.68,327.68,331.92,328.22,329.76,331.38,332.76,328.88,328.04,328.22
-grRainByYear = 0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,0.00,370.78,354.48
+grRainStormsStartDate = 2016-06-01,2016-06-02,2016-06-06,2016-06-14,2016-07-22,2016-07-30,2016-10-01,2016-10-06,2016-11-18,2016-12-20,2017-01-03,2017-01-04,2017-01-06,2017-01-10,2017-02-11,2017-02-22,2017-03-10,2017-03-18,2017-03-26,2017-04-02,2017-04-22,2017-05-14,2017-05-17,2017-06-16
+grRainStormsEndDate = 2016-06-01,2016-06-02,2016-06-06,2016-06-14,2016-07-23,2016-07-30,2016-10-01,2016-10-06,2016-11-18,2016-12-21,2017-01-03,2017-01-04,2017-01-06,2017-01-10,2017-02-12,2017-02-23,2017-03-10,2017-03-18,2017-03-26,2017-04-02,2017-04-22,2017-05-14,2017-05-18,2017-06-16
+grRainByDay = 327.68,327.68,327.68,327.68,327.68,327.68,327.72,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68,327.68
+grRainByMonth = 328.12,328.56,327.68,328.22,331.94,330.86,327.70,328.26,348.76,327.70,327.80,328.22,327.88,327.68,327.68,331.92,328.22,329.76,331.38,332.76,328.88,328.04,328.22,327.72
+grRainByYear = 655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,370.78,354.48
+```
+
+## Archive Data Example Output
+```
+date,time,outside temp (°F),outside temp high (°F), outside temp low (°F),insideTemp (°F),extra temp1 (°F), extra temp2 (°F), extra temp3 (°F),inside humidity (%),outside humidity (%),extra humidity 1 (%),extra humidity 2 (%),rainfall (clicks),highest rain rate (clicks/hr),barometer (inches Hg),forecast at end of period,number of wind samples,average wind speed (mph),prevailing wind direction (°),prevailing wind rose,highest wind speed (mph),highest wind direction (°),higest wind rose,average solar radiation (W/m^2),maximum solar radiation (W/m^2),average uv index,max uv,accumulated et (in),leaf temp 1 (°F),leaf temp 2 (°F),leaf wetness 1,leaf wetness 2,soil temp 1 (°F),soil temp 2 (°F),soil temp 3 (°F),soil temp 4 (°F),soil moisture 1 (cb),soil moisture 2 (cb), soil moisture 3 (cb), soil moisture 4 (cb)
+2017-09-04,19:00,72.9,73.7,72.9,78.2,,,,75,65,,,,,30.155,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1181,11,10,NNW,24,11,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-04,20:00,71.4,72.9,71.4,77.4,,,,70,61,,,,,30.174,Mostly clear with little temperature change.,1220,7,9,NNW,18,10,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,21:00,71.8,71.8,71.2,75.2,,,,61,61,,,,,30.191,Mostly clear with little temperature change.,1157,3,9,NNW,12,9,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,22:00,71.1,71.9,71.1,74.5,,,,61,59,,,,,30.206,Mostly clear with little temperature change.,1181,3,7,NNW,11,10,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,23:00,69.3,71.1,69.3,73.9,,,,62,58,,,,,30.216,Mostly clear with little temperature change.,1184,5,6,NNW,19,8,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,00:00,67.1,69.3,67.1,73.4,,,,66,58,,,,,30.210,Partly cloudy with little temperature change.,1191,5,6,NNW,20,6,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,01:00,65.4,67.1,65.4,72.7,,,,67,57,,,,,30.197,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1167,6,6,NNW,19,6,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,02:00,64.2,65.4,64.2,72.1,,,,67,57,,,,,30.181,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1184,6,6,NNW,19,6,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-05,03:00,64.0,64.2,63.7,71.5,,,,68,57,,,,,30.162,Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.,1160,5,6,NNW,18,6,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-05,04:00,63.2,64.0,63.2,71.0,,,,69,57,,,,,30.156,Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.,1197,4,6,NNW,17,6,NNW,0,,0,,0.002,,,,,,,,,,,,
 ```

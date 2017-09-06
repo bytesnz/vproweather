@@ -41,6 +41,7 @@ extern void PrintHLData(void);
 extern void PrintGDData(uint8_t * pData);
 extern void PrintTime(char *szData);
 extern void PrintDownloadInfo(void);
+extern uint16_t GetNumberOfPages(void);
 extern void StoreDownloadInfo(char* szData);
 extern void PrintArchHeader(void);
 extern void StoreArchPacket(char* szData);
@@ -237,9 +238,13 @@ extern char* ForecastString(uint16_t wRule);
 
 #define DATESTAMP_DAY(d) (d & 0x001f)
 #define DATESTAMP_MONTH(d) ((d & 0x01e0) / 32)
-#define DATESTAMP_YEAR(d) ((d & 0xfe00) / 512)
+#define DATESTAMP_YEAR(d) (((d & 0xfe00) / 512) + 2000)
 #define TIMESTAMP_HOUR(t) (t / 100)
 #define TIMESTAMP_MINUTE(t) (t % 100)
+
+#define PRINTINT(v,d,c) (v != d ? printf((c ? "%d," : "%d"), v) : (c ? printf(",") : ((void)0)))
+#define PRINTDECIMAL(v,d,c) (v != d ? printf((c ? "%0.1f," : "%0.1f"), v) : (c ? printf(",") : ((void)0)))
+#define PRINTTHOUSANDTHS(v,d,c) (v != d ? printf((c ? "%0.3f," : "%0.1f"), v) : (c ? printf(",") : ((void)0)))
 
 /* Definition of Davis LOOP data packet */
 typedef struct t_RTDATA
@@ -478,6 +483,45 @@ typedef struct t_EEDATA
     uint8_t szDumm[177];    /* stuff not used in this version       */
 
 } PACKED EEDATA;
+
+
+/* Definition of Davis revision A archive packet 52 bytes long */
+typedef struct t_ARCDATAA
+{
+    uint16_t date;           /* 0 16-bit date stamp YYYYYYYMMMMDDDDD         */
+                             /* day + month*32 + (year-2000)*512             */
+    uint16_t time;           /* 2 Timestamp HHMM                             */
+    int16_t  outsideTemp;    /* 4 Outside avg/final temperature degF/10      */
+    int16_t  outsideHighTemp;/* 6 Highest outside temp for archive period    */
+    int16_t  outsideLowTemp; /* 8 Lowest outside temp for archive period     */
+    uint16_t rainfall;       /* 10 Number of rainfall clicks over period     */
+    uint16_t highestRainRate;/* 12 Highest rainfall rate over period clks/hr */
+    uint16_t barometer;      /* 14 Barometer reading at end (Hg / 1000)      */
+    uint16_t avgSolarRad;    /* 16 Average solar radiation (W/m^2)           */
+    uint16_t windSamples;    /* 18 Number of wind samples                    */
+    int16_t  insideTemp;     /* 20 Inside avg/final temperature degF/10      */
+    uint8_t  insideHum;      /* 22 Inside humidity at end of period          */
+    uint8_t  outsideHum;     /* 23 Outside humidity at end of period         */
+    uint8_t  avgWindSpd;     /* 24 Average wind speed over period            */
+    uint8_t  highestWindSpd; /* 25 Highest wind speed over period            */
+    uint8_t  highestWindDir; /* 26 Direction of highest wind speed in period */
+    uint8_t  prevailWindDir; /* 27 Direction of prevailing wind over period  */
+    uint8_t  avgUvIndex;     /* 28 Average UV Index (UV Index / 10)          */
+    uint8_t  etAccumulated;  /* 29 Accumulated ET over last hour (in / 1000) */
+                             /*    Only records "on the hour" will have      */
+                             /*    non-zero value                            */
+    uint8_t  invalidData;    /* 30 Invalid Data                              */
+    uint8_t  soilMoisture[4];/* 31 4 soil moisture values (cb)               */
+    uint8_t  soilTemps[4];   /* 35 4 soil temperatures (degF + 90)           */
+    uint8_t  leafWetness[3]; /* 39 3 leaf wetness (0-15)                     */
+    uint8_t  recordType;     /* 42 Record type 0xFF = Rev A 0x00 = Rev B     */
+    uint8_t  extraTemps[3];  /* 43 3 extra temperatures (degF + 90)          */
+    uint8_t  extraHums[2];   /* 45 2 extra humidity values                   */
+    uint16_t reedClosed;     /* 47 Number of times the anemometer reed       */
+                             /*    switch closed                             */
+    uint16_t reedOpened;     /* 49 Number of times the anemometer reed       */
+                             /*    switch opened                             */
+} PACKED ARCDATAA;
 
 
 /* Definition of Davis revision B archive packet 52 bytes long */

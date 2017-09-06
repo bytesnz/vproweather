@@ -46,6 +46,7 @@
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
 static bool bVerbose;                   /* Verbose Mode */
+static bool bDebug;                     /* Debug Mode */
 static bool bBKLOn;                     /* Backlite ON */
 static bool bBKLOff;                    /* Backlite OFF */
 static bool bVer;                       /* Davis firmware version astring */
@@ -74,12 +75,9 @@ static int WakeUp(int nfd);
 static int ReadNextChar(int fdser, char *pChar);
 static void Delay(int secs, long microsecs);
 static int ReadToBuffer(int fdser, char *pszBuffer, int nBufSize);
-static int runCommand(char* command, int expectedLength, char* dataLabel,
-        bool expectingAck, bool expectingCrc);
+static int runCommand(char* command, int commandLength, int expectedLength,
+        char* dataLabel, bool expectingAck, bool expectingCrc);
 
-/*--------------------------------------------------------------------------
-    main
-----------------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     struct termios oldtio, newtio;  /* serial device configuration */
@@ -90,7 +88,7 @@ int main(int argc, char *argv[])
     bool gotV2Data = true;
     char *nextCommand;
     uint8_t errors = 0;
-
+    uint16_t numPages = 0;
 
     /* Get command line parms */
     if (!GetParms(argc, argv)) {
@@ -115,6 +113,8 @@ int main(int argc, char *argv[])
         printf(" -r, --version          Query for Davis firmware version string.\n");
         printf(" -m, --model            Query for weather station model name.\n");
         printf(" -d, --delay=num        Cmd Delay in 1/10ths seconds. Default is 10 (1 sec).\n");
+        printf(" -e, --hex              Display communication between weather \n");
+        printf("                        station and computer and debugging output\n");
         printf(" -v, --verbose          Verbose mode.\n");
         printf(" Device                 Serial Device. Required parameter.\n");
         printf("\n");
@@ -258,16 +258,16 @@ int main(int argc, char *argv[])
 
     /* Get weather station archive interval */
     if (bGetInterval) {
-        if (runCommand("EEBRD 2D 01\n", 1, "archive interval",true, true)) {
+        if (runCommand("EEBRD 2D 01\n", -1, 3, "archive interval",true, true)) {
           exit(2);
         }
 
-        printf("archiveInterval=%d\n", (uint8_t)szSerBuffer[1]);
+        printf("archiveTime = %d\n", (uint8_t)szSerBuffer[1]);
     }
 
     /* Get weather station time */
     if(bGetTime) {
-        if (runCommand("GETTIME\n", 6, "time", true, true)) {
+        if (runCommand("GETTIME\n", -1, 8, "time", true, true)) {
           exit(2);
         }
 
@@ -330,7 +330,7 @@ int main(int argc, char *argv[])
 
     /* Get highs/lows data set */
     if(bGetHLD) {
-        if(runCommand("HILOWS\n", 436, "hi/lows", true, true)) {
+        if(runCommand("HILOWS\n", -1, 438, "hi/lows", true, true)) {
           exit(2);
         }
 
@@ -342,7 +342,7 @@ int main(int argc, char *argv[])
 
     /* Get Graph data sets */
     if(bGetGD) {
-        if (runCommand("GETEE\n", 4096, "graph", true, true)) {
+        if (runCommand("GETEE\n", -1, 4098, "graph", true, true)) {
           exit(2);
         }
 
@@ -354,13 +354,13 @@ int main(int argc, char *argv[])
     /* Get real time data set (Davis LOOP data) */
     if(bGetRTD) {
         /* Get LOOP 1 data */
-        if (runCommand("LOOP 1\n", 99, "real time v1", true, true)) {
+        if (runCommand("LOOP 1\n", -1, 99, "real time v1", true, true)) {
           exit(2);
         }
         GetRTData(szSerBuffer);             /* get data to struct */
 
         /* Get LOOP 2 data */
-        if (runCommand("LPS 2 1\n", 99, "real time v2", true, true)) {
+        if (runCommand("LPS 2 1\n", -1, 99, "real time v2", true, true)) {
           gotV2Data = false;
         } else {
           GetRT2Data(szSerBuffer);             /* get data to struct */
@@ -372,48 +372,66 @@ int main(int argc, char *argv[])
 
 
     if (bArchive) {
-      if (runCommand("DMPAFT\n", 0, "archive download initiation", true, false)) {
+      if (runCommand("DMPAFT\n", -1, 0, "archive download initiation", true, false)) {
         exit(2);
       }
 
-      if (runCommand(datetimeString, 4, "archive download initiation", true, true)) {
+      datetimeString[6] = '\n';
+      if (runCommand(datetimeString, 6, 6, "archive download initiation", true, true)) {
         exit(2);
       } else {
+        StoreDownloadInfo(szSerBuffer);
+        numPages = GetNumberOfPages();
         if (bVerbose) {
-          StoreDownloadInfo(szSerBuffer);
           PrintDownloadInfo();
         }
       }
 
-      PrintArchHeader();
+      if (numPages) {
+        PrintArchHeader();
 
-      nextCommand = ACK_STR;
-      while (errors < 5) {
-        if (runCommand(nextCommand, 267, "archive packet", false, true)) {
-          nextCommand = NAK_STR;
-          errors++;
-          Delay(yDelay, 0);
-        } else {
-          nextCommand = ACK_STR;
-          StoreArchPacket(szSerBuffer);
-          PrintArchPacket((archiveRecords ? archiveRecords % 5 : 0));
-          if (archiveRecords) {
-            archiveRecords = archiveRecords - 5;
+        if (archiveRecords && (archiveRecords / 5) < numPages) {
+          numPages = archiveRecords / 5;
+        }
 
-            // Exit if printed enough records
-            if (archiveRecords <= 0) {
-              break;
+        if (bVerbose) {
+          printf("%d pages will be downloaded (%d archive records)\n", numPages, archiveRecords);
+        }
+
+        i = 0;
+
+        nextCommand = ACK_STR;
+        while (errors < 5) {
+          if (runCommand(nextCommand, -1, 267, "archive packet", false, true)) {
+            nextCommand = NAK_STR;
+            errors++;
+            Delay(yDelay, 0);
+          } else {
+            nextCommand = ACK_STR;
+            StoreArchPacket(szSerBuffer);
+            PrintArchPacket((archiveRecords ? archiveRecords % 5 : 0));
+            if (archiveRecords) {
+              archiveRecords = archiveRecords - 5;
+
+              // Exit if printed enough records
+              if (archiveRecords <= 0) {
+                break;
+              }
+            } else {
+              if (++i >= numPages) {
+                break;
+              }
             }
           }
         }
+
+        if (errors >= 5) {
+          printf("Encountered more than 5 errors while downloading, so stopping\n");
+          printf("Try increasing the delay\n");
+        }
       }
 
-      if (errors >= 5) {
-        printf("Encountered more than 5 errors while downloading, so stopping\n");
-        printf("Try increasing the delay\n");
-      }
-
-      runCommand(ESC_STR, 0, "Cancel", false, false);
+      runCommand(ESC_STR, -1, 0, "Cancel", false, false);
     }
 
 
@@ -434,17 +452,22 @@ int main(int argc, char *argv[])
 
 
 
-/*--------------------------------------------------------------------------
-    GetParms
-    Reads command line parameters.
-----------------------------------------------------------------------------*/
+/**
+ * Reads command line parameters.
+ *
+ * @param argc Number of arguments
+ * @param argv Argument string array
+ *
+ * @returns 0 on error (eg a parameter missing) and -1 on success
+ */
 int GetParms(int argc, char *argv[])
 {
     extern char *optarg;
     char *endptr;
     extern int optind, opterr, optopt;
     int c, i;
-    struct tm *archiveTime = malloc(sizeof(struct tm *));
+    struct tm *archiveTime = malloc(sizeof(struct tm));
+    memset(archiveTime, 0, sizeof(struct tm));
 
      /* options descriptor */
     static struct option longopts[] = {
@@ -460,6 +483,7 @@ int GetParms(int argc, char *argv[])
         { "get-time",       no_argument,    0,  't' },
         { "set-time",       no_argument,    0,  's' },
         { "verbose",        no_argument,    0,  'v' },
+        { "hex",            no_argument,    0,  'e' },
         { "delay",          required_argument,  0,  'd' },
         { NULL,             0,              NULL,   0 }
     };
@@ -477,6 +501,7 @@ int GetParms(int argc, char *argv[])
     bGetGD = false;
     bHTML = false;
     bVerbose = false;
+    bDebug = false;
     bGetInterval = false;
     bGetTime = false;
     bSetTime = false;
@@ -485,7 +510,7 @@ int GetParms(int argc, char *argv[])
     if(argc == 1)
         return 0;               /* no parms at all */
 
-    while ((c = getopt_long(argc, argv, "ofrmxlga::ivtsb:d:", longopts, NULL )) != EOF) {
+    while ((c = getopt_long(argc, argv, "ofrmxlga::ivetsb:d:", longopts, NULL )) != EOF) {
         switch (c) {
             case 'o': bBKLOn        = true; break;
             case 'f': bBKLOff       = true; break;
@@ -498,6 +523,10 @@ int GetParms(int argc, char *argv[])
             case 'v': bVerbose      = true; break;
             case 't': bGetTime      = true; break;
             case 's': bSetTime      = true; break;
+            case 'e':
+                bVerbose = true;
+                bDebug = true;
+                break;
 
             case 'a':
                 bArchive = true;
@@ -507,6 +536,7 @@ int GetParms(int argc, char *argv[])
                   // Try and parse a full date time string
                   if (strptime(optarg, "%Y-%m-%dT%H:%M", archiveTime) == NULL
                       && strptime(optarg, "%Y-%m-%d", archiveTime) == NULL) {
+                    free(archiveTime);
                     archiveTime = NULL;
                     archiveRecords = strtol(optarg, &endptr, 10);
 
@@ -518,6 +548,9 @@ int GetParms(int argc, char *argv[])
 
                   MakeVantageDatetime(archiveTime, datetimeString);
                   GenerateCRC(4, datetimeString, &datetimeString[4]);
+                  if (archiveTime != NULL) {
+                    free(archiveTime);
+                  }
                 }
                 break;
 
@@ -530,7 +563,6 @@ int GetParms(int argc, char *argv[])
                 }
                 yDelay = (unsigned char)i;
                 break;
-
             case '?': /* user entered unknown option */
             case ':': /* user entered option without required value */
             case 'h': /* User wants Usage message */
@@ -547,15 +579,20 @@ int GetParms(int argc, char *argv[])
             return 0;
         }
     }
+
+
     return -1;
 }
 
 
 
-/*--------------------------------------------------------------------------
-    WakeUp
-    Wakes up the weather station per the Davis specs.
-----------------------------------------------------------------------------*/
+/**
+ * Wakes up the weather station per the Davis specs.
+ *
+ * @param nfd Serial line file descriptor
+ *
+ * @returns -1 on successful wake up or 0 on error
+ */
 int WakeUp(int nfd)
 {
     char ch;
@@ -584,11 +621,15 @@ int WakeUp(int nfd)
 
 
 
-/*--------------------------------------------------------------------------
-    ReadNextChar
-    Reads the next character from the serial device. Returns zero if no
-    character was available.
-----------------------------------------------------------------------------*/
+/**
+ * Reads the next character from the serial device. Returns zero if no
+ * character was available.
+ *
+ * @param nfd Serial line file descriptor
+ * @param pChar Location to put read character
+ *
+ * @returns The number of characters read
+ */
 int ReadNextChar(int nfd, char *pChar)
 {
     int nResult;
@@ -604,10 +645,12 @@ int ReadNextChar(int nfd, char *pChar)
 
 
 
-/*--------------------------------------------------------------------------
-    Delay
-    Delays by the number of seconds and microseconds.
-----------------------------------------------------------------------------*/
+/**
+ * Delays by the number of seconds and microseconds.
+ *
+ * @param secs Number of seconds to delay by
+ * @param microsecs Number of microseconds to delay
+ */
 void Delay(int secs, long microsecs)
 {
     static struct timeval t1;
@@ -622,12 +665,17 @@ void Delay(int secs, long microsecs)
 
 
 
-/*--------------------------------------------------------------------------
-    ReadToBuffer
-    Reads data to a buffer until no more characters are available. If
-    the buffer overflows, returns -1. Otherwise, returns the number of
-    characters read.
-----------------------------------------------------------------------------*/
+/**
+ * Reads data to a buffer until no more characters are available. If
+ * the buffer overflows, returns -1. Otherwise, returns the number of
+ * characters read.
+ *
+ * @param nfd Serial line file descriptor
+ * @param pszBuffer Buffer to put read data into
+ * @param nBufSize Maximum number of characters to read
+ *
+ * @returns The number of characters read
+ */
 int ReadToBuffer(int nfd, char *pszBuffer, int nBufSize)
 {
     int nPos = 0;               /* current character position */
@@ -644,22 +692,49 @@ int ReadToBuffer(int nfd, char *pszBuffer, int nBufSize)
 
 
 
-/*--------------------------------------------------------------------------
-    RunCommand
-    Run a command and check CRC of the reply. If the command is run
-    successfully and the data of the CRC passes, returns 0, otherwise -1
-----------------------------------------------------------------------------*/
-int runCommand(char* command, int expectedLength, char* dataLabel,
+/**
+ * Run a command and check CRC of the reply. If the command is run
+ * successfully and the data of the CRC passes, returns 0, otherwise -1
+ *
+ * @param command Command to run
+ * @param commandLength Length (number of characters) of command
+ * @param expectedLength The expected number of characters in the response
+ *   (including the CRC, but excluding the ACK)
+ * @param dataLabel Label for verbose messages
+ * @param expectingAck Whether or not the first character should be an ACK
+ * @param expectingCrc Whether or not a CRC is expected in the response
+ *
+ * @returns 0 on successful running of command (ACK received and CRC passed
+ *   etc) or -1 on error
+ */
+int runCommand(char* command, int commandLength, int expectedLength, char* dataLabel,
         bool expectingAck, bool expectingCrc)
 {
     int16_t nCnt;
+    int i = 0;
+    int max;
+    int totalLength = expectedLength;
 
-    if(bVerbose)
+    if (commandLength == -1) {
+      commandLength = strlen(command);
+    }
+
+    if(bVerbose) {
         printf("Getting %s data set...\n", dataLabel);
+    }
+
+    if (bDebug) {
+        printf("> ");
+
+        for (i = 0; i < commandLength; i++) {
+          printf("%02x  ", (uint8_t)command[i]);
+        }
+        printf("\n");
+    }
 
     while(ReadNextChar(fdser, &ch));        /* clear channel and delay */
-    strcpy(szSerBuffer, command);         /* make Davis cmd string */
-    if(write(fdser, &szSerBuffer, strlen(szSerBuffer)) != strlen(szSerBuffer))
+    memcpy(szSerBuffer, command, commandLength);         /* make Davis cmd string */
+    if(write(fdser, &szSerBuffer, commandLength) != commandLength)
     {
         perror(szSWriteErr);
         return -1;
@@ -668,22 +743,19 @@ int runCommand(char* command, int expectedLength, char* dataLabel,
     tcdrain(fdser);
     nCnt = ReadToBuffer(fdser, szSerBuffer, sizeof(szSerBuffer));
 
-    if (expectingCrc) {
-      expectedLength = expectedLength + 2;
-    }
     if (expectingAck) {
-      expectedLength = expectedLength + 1;
+      totalLength = totalLength + 1;
     }
 
-    if (bVerbose) {
-      int i = 0;
-      int max;
+    if (bDebug) {
 
-      if (expectedLength > 20) {
+      max = nCnt;
+
+      /*if (max > 20) {
         max = 20;
-      } else {
-        max = expectedLength;
-      }
+      }*/
+
+      printf("< ");
 
       for (i = 0; i < max; i++) {
         printf("%02x  ", (uint8_t)szSerBuffer[i]);
@@ -702,13 +774,13 @@ int runCommand(char* command, int expectedLength, char* dataLabel,
     }
 
     if(bVerbose) {
-        printf("Got %d of %d characters...", nCnt, expectedLength);
-        if(nCnt != expectedLength)
+        printf("Got %d of %d characters...", nCnt, totalLength);
+        if(nCnt != totalLength)
             printf("Bad\n");
         else
             printf("Good\n");
     }
-    if(nCnt != expectedLength) {
+    if(nCnt != totalLength) {
         fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
         return -1;
         exit(2);

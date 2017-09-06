@@ -330,6 +330,18 @@ void GenerateCRC(int nCnt, char *pData, char *crc)
 
 
 /**
+ * Creates VantagePro date integer from the given time structure
+ *
+ * @param time Time struct to make date integer for
+ *
+ * @returns VantagePro date integer
+ */
+uint16_t MakeVangateDateInt(struct tm* time) {
+  return time->tm_mday + ((time->tm_mon + 1) * 32) + ((time->tm_year - 100) * 512);
+}
+
+
+/**
  * Creates a Vantage Datetime uint16_t[2] from the given time struct
  * [ day + month*32 + (year-2000)*512, 100*hours + minutes ]
  *
@@ -343,7 +355,7 @@ void MakeVantageDatetime(struct tm* time, char *datetimeString)
 
   if (time != NULL) {
     // Calculate date portion
-    value = time->tm_mday + ((time->tm_mon + 1) * 32) + ((time->tm_year - 100) * 512);
+    value = MakeVangateDateInt(time);
     datetimeString[1] = HIBYTE(value);
     datetimeString[0] = LOBYTE(value);
 
@@ -682,7 +694,7 @@ void PrintTimeRef(void)
     {
         time(&tt);
         stm = *localtime(&tt);              /* get time now */
-        stm.tm_min = (stm.tm_min/10)*10;    /* round to nearest 15min incr */
+        stm.tm_min = (stm.tm_min/10)*10;    /* round to nearest 10min incr */
         stm.tm_min -= (10 * i);             /* back by 10 minutes */
         tt = mktime(&stm);
         stm = *localtime(&tt);              /* get time again */
@@ -1455,6 +1467,18 @@ void PrintDownloadInfo(void)
 }
 
 
+/**
+ * Returns the number of pages that will be sent by the archive download
+ * command (from the details received from the unit)
+ *
+ * @returns Number of pages to be downloaded
+ */
+uint16_t GetNumberOfPages(void)
+{
+  return arcInfo.numberOfPages;
+}
+
+
 
 /**
  * Prints the header for the archive records to stdout
@@ -1463,27 +1487,27 @@ void PrintArchHeader(void)
 {
   printf("date,time,");
   // Temperatures
-  printf("outside temp,outside temp high, outside temp low,insideTemp,");
-  printf("extra temp1, extra temp2, extra temp3,");
+  printf("outside temp (°F),outside temp high (°F), outside temp low (°F),insideTemp (°F),");
+  printf("extra temp1 (°F), extra temp2 (°F), extra temp3 (°F),");
   // Humidity
-  printf("inside humidity,outside humidity,");
-  printf("extra humidity 1,extra humidity 2,");
+  printf("inside humidity (%%),outside humidity (%%),");
+  printf("extra humidity 1 (%%),extra humidity 2 (%%),");
   // Rainfall
-  printf("rainfall,highest rain ");
+  printf("rainfall (clicks),highest rain rate (clicks/hr),");
   // Barometer and forecast
-  printf("barometer,forecast at end of period,");
+  printf("barometer (inches Hg),forecast at end of period,");
   // Wind speed
   printf("number of wind samples,");
-  printf("average wind speed,,prevailing wind direction,prevailing wind rose,");
-  printf("highest wind speed,highest wind direction,higest wind rose,");
+  printf("average wind speed (mph),prevailing wind direction (°),prevailing wind rose,");
+  printf("highest wind speed (mph),highest wind direction (°),higest wind rose,");
   // Radiation
-  printf("average solar radiation,maximum solar radiation,");
-  printf("average uv index,max uv,accumulated et,");
+  printf("average solar radiation (W/m^2),maximum solar radiation (W/m^2),");
+  printf("average uv index,max uv,accumulated et (in),");
   // Leaf
-  printf("leaf temp 1,leaf temp 2,leaf wetness 1,leaf wetness 2,");
+  printf("leaf temp 1 (°F),leaf temp 2 (°F),leaf wetness 1,leaf wetness 2,");
   // Soil
-  printf("soil temp 1,soil temp 2,soil temp 3,soil temp 4,");
-  printf("soil moisture 1,soil moisture 2, soil moisture 3, soil moisture 4\n");
+  printf("soil temp 1 (°F),soil temp 2 (°F),soil temp 3 (°F),soil temp 4 (°F),");
+  printf("soil moisture 1 (cb),soil moisture 2 (cb), soil moisture 3 (cb), soil moisture 4 (cb)\n");
 }
 
 
@@ -1497,9 +1521,15 @@ void PrintArchHeader(void)
 void PrintArchPacket(int maxArcRecords)
 {
   int i;
+  time_t currentTime;
+  struct tm *timeStruct;
+  uint16_t currentDate;
   ARCDATAB *record;
 
-  printf("Sequence number: %d\n", arcPacket.seqNumber);
+  // Get Current date
+  time(&currentTime);
+  timeStruct = localtime(&currentTime);
+  currentDate = MakeVangateDateInt(timeStruct);
 
   if (maxArcRecords <= 0 || maxArcRecords > 5) {
     maxArcRecords = 5;
@@ -1508,53 +1538,74 @@ void PrintArchPacket(int maxArcRecords)
   for (i = 0; i < maxArcRecords; i++) {
     record = &arcPacket.records[i];
 
+    if (record->date > currentDate) {
+      continue;
+    }
+
     // Date and time
-    printf("%d-%d-%d,", DATESTAMP_YEAR(record->date),
+    printf("%04d-%02d-%02d,", DATESTAMP_YEAR(record->date),
           DATESTAMP_MONTH(record->date), DATESTAMP_DAY(record->date));
-    printf("%d:%d,", TIMESTAMP_HOUR(record->time), TIMESTAMP_MINUTE(record->time));
+    printf("%02d:%02d,", TIMESTAMP_HOUR(record->time), TIMESTAMP_MINUTE(record->time));
 
     // Outside/Inside temperatures
-    printf("%0.1f,%0.1f,%0.1f,%0.1f", TEMP(record->outsideTemp),
-          TEMP(record->outsideHighTemp), TEMP(record->outsideLowTemp),
-          TEMP(record->insideTemp));
+    PRINTDECIMAL(TEMP(record->outsideTemp), 32767, true);
+    PRINTDECIMAL(TEMP(record->outsideHighTemp), -32767, true);
+    PRINTDECIMAL(TEMP(record->outsideLowTemp), 32767, true);
+    PRINTDECIMAL(TEMP(record->insideTemp), 32767, true);
 
-    // Extra temperatures
-    printf("%d,%d,%d,", ROUGH_TEMP(record->extraTemps[0]),
-            ROUGH_TEMP(record->extraTemps[1]),
-            ROUGH_TEMP(record->extraTemps[2]));
+    // Extra temperatures (** dash value incorrectly set to 255 on VP2)
+    PRINTINT(record->extraTemps[0], 255, true);
+    PRINTINT(record->extraTemps[1], 255, true);
+    PRINTINT(record->extraTemps[2], 255, true);
 
 
     // Humidity
-    printf("%d,%d,%d,%d,", record->outsideHum, record->insideHum,
-            record->extraHums[0], record->extraHums[1]);
+    PRINTINT(record->outsideHum, 255, true);
+    PRINTINT(record->insideHum, 255, true);
+    PRINTINT(record->extraHums[0], 255, true);
+    PRINTINT(record->extraHums[1], 255, true);
 
     // Rainfall
-    printf("%d,%d,", record->rainfall, record->highestRainRate);
+    PRINTINT(record->rainfall, 0, true);
+    PRINTINT(record->highestRainRate, 0, true);
 
     // Barometer and forecast
-    printf("%d,%s", record->barometer, ForecastString(record->forecastRule));
+    PRINTTHOUSANDTHS(record->barometer / 1000.0, 0, true);
+    printf("%s,", ForecastString(record->forecastRule));
 
     // Wind speed
-    printf("%d,%d,%s,%d,%d,%s,", record->windSamples,
-            record->prevailWindDir, getWindRose(record->prevailWindDir),
-            record->highestWindSpd, record->highestWindDir,
-            getWindRose(record->highestWindDir));
+    PRINTINT(record->windSamples, 0, true);
+    PRINTINT(record->avgWindSpd, 255, true);
+    PRINTINT(record->prevailWindDir, 32767, true);
+    printf("%s,", getWindRose(record->prevailWindDir));
+    PRINTINT(record->highestWindSpd, 0, true);
+    PRINTINT(record->highestWindDir, 32767, true);
+    printf("%s,", getWindRose(record->highestWindDir));
 
     // Radiation
-      printf("%d,%d,%d,%d,%d", record->avgSolarRad, record->solarRadMax,
-            record->avgUvIndex, record->uvMax, record->etAccumulated);
+    PRINTINT(record->avgSolarRad, 32767, true);
+    PRINTINT(record->solarRadMax, 0, true);
+    PRINTINT(record->avgUvIndex, 255, true);
+    PRINTDECIMAL(record->uvMax / 10.0, 0, true);
+    PRINTTHOUSANDTHS(record->etAccumulated / 1000.0, 0, true);
 
     // Leaf
-    printf("%d,%d,%d,%d,", ROUGH_TEMP(record->leafTemps[0]),
-            ROUGH_TEMP(record->leafTemps[1]), record->leafWetness[0],
-            record->leafWetness[1]);
+    PRINTINT(ROUGH_TEMP(record->leafTemps[0]), 165, true);
+    PRINTINT(ROUGH_TEMP(record->leafTemps[1]), 165, true);
+    PRINTINT(record->leafWetness[0], 255, true);
+    PRINTINT(record->leafWetness[1], 255, true);
 
-    //Soil
-    printf("%d,%d,%d,%d,%d,%d,%d,%d,", ROUGH_TEMP(record->soilTemps[0]),
-            ROUGH_TEMP(record->soilTemps[1]), ROUGH_TEMP(record->soilTemps[2]),
-            ROUGH_TEMP(record->soilTemps[3]), record->soilMoisture[0],
-            record->soilMoisture[1], record->soilMoisture[2],
-            record->soilMoisture[3]);
+    //Soil (soil temp dash values are 255-90)
+    PRINTINT(ROUGH_TEMP(record->soilTemps[0]), 165, true);
+    PRINTINT(ROUGH_TEMP(record->soilTemps[1]), 165, true);
+    PRINTINT(ROUGH_TEMP(record->soilTemps[2]), 165, true);
+    PRINTINT(ROUGH_TEMP(record->soilTemps[3]), 165, true);
+    PRINTINT(record->soilMoisture[0], 255, true);
+    PRINTINT(record->soilMoisture[1], 255, true);
+    PRINTINT(record->soilMoisture[2], 255, true);
+    PRINTINT(record->soilMoisture[3], 255, false);
+
+    printf("\n");
   }
 }
 
