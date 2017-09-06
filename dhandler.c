@@ -594,8 +594,7 @@ void PrintRTData(bool includeLoop2Data)
 /**
  * Converts a BCD encoded time value to ascii human readable form. Returns
  * a pointer to a static buffer containing the converted ascii string. The
- * form is '12:33PM'. If you don't like this format, here is where you need
- * to change it.
+ * form is in the ISO 8601 format.
  *
  * @param wTime Time integer to convert
  *
@@ -604,7 +603,6 @@ void PrintRTData(bool includeLoop2Data)
 char* TimeConvert(uint16_t wTime)
 {
     static char szBuf[32];          /* static return buffer */
-    bool bAM = true;
     int nHours = wTime/100;
     int nMinutes = wTime - ((wTime/100) * 100);
 
@@ -615,22 +613,7 @@ char* TimeConvert(uint16_t wTime)
         return szBuf;
     }
 
-    if(nHours > 12)
-    {
-            /* PM time ? */
-            nHours -= 12;
-            bAM = false;
-    }
-    else if(nHours == 12)
-        bAM = false;
-
-    if(nHours == 0 && bAM)
-        nHours = 12;
-    if(nMinutes)
-        sprintf(szBuf, "%d:%02d%s", nHours, nMinutes, (bAM?"AM":"PM"));
-    else
-        sprintf(szBuf, "%d%s", nHours, (bAM?"AM":"PM"));
-
+    sprintf(szBuf, "%02d:%02d", nHours, nMinutes);
 
     return szBuf;
 }
@@ -639,8 +622,7 @@ char* TimeConvert(uint16_t wTime)
 
 
 /**
- * Prints an encoded date value in the form '23-JUN-04'. If you don't like
- * this format, here is where you need to do your hacking.
+ * Prints an encoded date value in the ISO 8601 format.
  *
  * @param wDate Date integer to convert
  */
@@ -652,29 +634,17 @@ void PrintDate(uint16_t wDate)
         printf("n/a");
         return;
     }
+    // Year
+    printf("20%02d-", (wDate & 0x003f) );
+
+    // Month
+    printf("%02d-", (wDate & 0xf000) >> 12);         /* strip out month */
+
+    // Day
     w = (wDate & 0x0f00) >> 7;          /* get msb of date */
     if(wDate & 0x0080)
         ++w;                            /* do crappy Davis format incr */
-    printf("%02d-", w);
-
-    w = (wDate & 0xf000) >> 12;         /* strip out month */
-    switch(w) {
-        case 1: printf("JAN"); break;
-        case 2: printf("FEB"); break;
-        case 3: printf("MAR"); break;
-        case 4: printf("APR"); break;
-        case 5: printf("MAY"); break;
-        case 6: printf("JUN"); break;
-        case 7: printf("JUL"); break;
-        case 8: printf("AUG"); break;
-        case 9: printf("SEP"); break;
-        case 10: printf("OCT"); break;
-        case 11: printf("NOV"); break;
-        case 12: printf("DEC"); break;
-        default: printf("???"); break;
-    }
-
-    printf("-20%02d", (wDate & 0x003f) );
+    printf("%02d", w);
 }
 
 
@@ -749,7 +719,7 @@ void PrintTimeRef(void)
         stm.tm_mday -= i;               /* back by days */
         tt = mktime(&stm);
         stm = *localtime(&tt);          /* get time again */
-        printf("%d/%d", stm.tm_mon+1, stm.tm_mday);
+        printf("%4d-%02d-%02d", stm.tm_year + 1900, stm.tm_mon+1, stm.tm_mday);
         if(i > 1)
             printf(",");
     }
@@ -761,22 +731,7 @@ void PrintTimeRef(void)
     stm = *localtime(&tt);              /* get time now */
     for(i = 24; i; i--)
     {
-        switch(stm.tm_mon)
-        {
-            case 0: printf("JAN"); break;
-            case 1: printf("FEB"); break;
-            case 2: printf("MAR"); break;
-            case 3: printf("APR"); break;
-            case 4: printf("MAY"); break;
-            case 5: printf("JUN"); break;
-            case 6: printf("JUL"); break;
-            case 7: printf("AUG"); break;
-            case 8: printf("SEP"); break;
-            case 9: printf("OCT"); break;
-            case 10: printf("NOV"); break;
-            case 11: printf("DEC"); break;
-            default: printf("???"); break;
-        }
+        printf("%d", stm.tm_mon + 1);
         stm.tm_mon++;
         if (stm.tm_mon > 11) stm.tm_mon = 0;
 
