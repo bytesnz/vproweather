@@ -41,7 +41,7 @@
 #include "dhandler.h"
 #include "byte.h"
 
-#define VERSION "1.3.0"
+#define VERSION "1.3.1"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
@@ -720,7 +720,7 @@ int runCommand(char* command, int commandLength, int expectedLength, char* dataL
     }
 
     if(bVerbose) {
-        printf("Getting %s data set...\n", dataLabel);
+        printf("Sending %s...\n", dataLabel);
     }
 
     if (bDebug) {
@@ -775,15 +775,25 @@ int runCommand(char* command, int commandLength, int expectedLength, char* dataL
 
     if(bVerbose) {
         printf("Got %d of %d characters...", nCnt, totalLength);
+    }
+
+    // Check for 0x0a0d at end
+    if (nCnt == totalLength + 2) {
+        if (szSerBuffer[totalLength] == 0x0a
+                && szSerBuffer[totalLength + 1] == 0x0d) {
+            printf("Good\n");
+        }
+    } else {
         if(nCnt != totalLength)
             printf("Bad\n");
         else
             printf("Good\n");
-    }
-    if(nCnt != totalLength) {
-        fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
-        return -1;
-        exit(2);
+
+        if(nCnt != totalLength) {
+            fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");
+            return -1;
+            exit(2);
+        }
     }
     if (expectingCrc) {
         if((nCnt = CheckCRC(expectedLength,
