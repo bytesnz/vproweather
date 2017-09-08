@@ -41,7 +41,7 @@
 #include "dhandler.h"
 #include "byte.h"
 
-#define VERSION "1.3.1"
+#define VERSION "1.3.2"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
@@ -55,6 +55,7 @@ static bool bGetRTD;                    /* Get Real Time Data */
 static bool bGetHLD;                    /* Get High Low Data */
 static bool bGetGD;                     /* Get graph data */
 static bool bArchive;                   /* Get archive data */
+static bool bPrintArchiveHeader;        /* Print archive header with data */
 static bool bGetInterval;               /* Get arcive interval */
 static bool bGetTime;                   /* Get time flag */
 static bool bSetTime;                   /* Set time flag */
@@ -105,6 +106,8 @@ int main(int argc, char *argv[])
         printf("                          - all the records since arc date\n");
         printf("                            (in yyyy-mm-dd[THH:MM format]\n");
         printf("                          - the last arc records\n");
+        printf(" -A, --archive-header   Print the archive data header with the\n");
+        printf("                        archive records\n");
         printf(" -i, --get-interval     Get the current archive interval\n");
         printf(" -t, --get-time         Get weather station time.\n");
         printf(" -s, --set-time         Set weather station time to system time.\n");
@@ -388,7 +391,9 @@ int main(int argc, char *argv[])
       }
 
       if (numPages) {
-        PrintArchHeader();
+        if (bPrintArchiveHeader) {
+          PrintArchHeader();
+        }
 
         if (archiveRecords && (archiveRecords / 5) < numPages) {
           numPages = archiveRecords / 5;
@@ -479,6 +484,7 @@ int GetParms(int argc, char *argv[])
         { "get-hilo",       no_argument,    0,  'l' },
         { "get-graph",      no_argument,    0,  'g' },
         { "get-archive",    optional_argument, 0,  'a' },
+        { "archive-header", no_argument,    0,  'A' },
         { "get-interval",   no_argument,    0,  'i' },
         { "get-time",       no_argument,    0,  't' },
         { "set-time",       no_argument,    0,  's' },
@@ -499,6 +505,8 @@ int GetParms(int argc, char *argv[])
     bGetRTD = false;
     bGetHLD = false;
     bGetGD = false;
+    bArchive = false;
+    bPrintArchiveHeader = false;
     bHTML = false;
     bVerbose = false;
     bDebug = false;
@@ -510,7 +518,7 @@ int GetParms(int argc, char *argv[])
     if(argc == 1)
         return 0;               /* no parms at all */
 
-    while ((c = getopt_long(argc, argv, "ofrmxlga::ivetsb:d:", longopts, NULL )) != EOF) {
+    while ((c = getopt_long(argc, argv, "ofrmxlga::Aivetsb:d:", longopts, NULL )) != EOF) {
         switch (c) {
             case 'o': bBKLOn        = true; break;
             case 'f': bBKLOff       = true; break;
@@ -527,6 +535,7 @@ int GetParms(int argc, char *argv[])
                 bVerbose = true;
                 bDebug = true;
                 break;
+            case 'A': bPrintArchiveHeader = true; break;
 
             case 'a':
                 bArchive = true;
@@ -778,16 +787,18 @@ int runCommand(char* command, int commandLength, int expectedLength, char* dataL
     }
 
     // Check for 0x0a0d at end
-    if (nCnt == totalLength + 2) {
-        if (szSerBuffer[totalLength] == 0x0a
-                && szSerBuffer[totalLength + 1] == 0x0d) {
+    if (nCnt == totalLength + 2 && szSerBuffer[totalLength] == 0x0a
+            && szSerBuffer[totalLength + 1] == 0x0d) {
+        if (bVerbose) {
             printf("Good\n");
         }
     } else {
-        if(nCnt != totalLength)
-            printf("Bad\n");
-        else
-            printf("Good\n");
+        if (bVerbose) {
+            if(nCnt != totalLength)
+                printf("Bad\n");
+            else
+                printf("Good\n");
+        }
 
         if(nCnt != totalLength) {
             fprintf(stderr, "vproweather: Didn't get all data. Try changing delay parameter.\n");

@@ -19,6 +19,8 @@ Options:
                           - all the records since arc date
                             (in yyyy-mm-dd[THH:MM format]
                           - the last arc records
+ -A, --archive-header   Print the archive data header with the
+                        archive records
  -i, --get-interval     Get the current archive interval
  -t, --get-time         Get weather station time.
  -s, --set-time         Set weather station time to system time.
@@ -232,7 +234,7 @@ grRainByMonth = 328.12,328.56,327.68,328.22,331.94,330.86,327.70,328.26,348.76,3
 grRainByYear = 655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,370.78,354.48
 ```
 
-## Archive Data Example Output
+## Archive Data Example Output (with Archive Header)
 ```
 date,time,outside temp (°F),outside temp high (°F), outside temp low (°F),insideTemp (°F),extra temp1 (°F), extra temp2 (°F), extra temp3 (°F),inside humidity (%),outside humidity (%),extra humidity 1 (%),extra humidity 2 (%),rainfall (clicks),highest rain rate (clicks/hr),barometer (inches Hg),forecast at end of period,number of wind samples,average wind speed (mph),prevailing wind direction (°),prevailing wind rose,highest wind speed (mph),highest wind direction (°),higest wind rose,average solar radiation (W/m^2),maximum solar radiation (W/m^2),average uv index,max uv,accumulated et (in),leaf temp 1 (°F),leaf temp 2 (°F),leaf wetness 1,leaf wetness 2,soil temp 1 (°F),soil temp 2 (°F),soil temp 3 (°F),soil temp 4 (°F),soil moisture 1 (cb),soil moisture 2 (cb), soil moisture 3 (cb), soil moisture 4 (cb)
 2017-09-04,19:00,72.9,73.7,72.9,78.2,,,,75,65,,,,,30.155,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1181,11,10,NNW,24,11,NNW,0,,0,,0.003,,,,,,,,,,,,
