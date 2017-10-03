@@ -234,6 +234,7 @@ extern char* ForecastString(uint16_t wRule);
 #define LOG_AVERAGE_TEMPS            SAVE_HOUR+11            // MUST BE AT 4092
 
 #define TEMP(t) (t / 10.0)
+#define DASH_TEMP(t,d) (t != d ? (t / 10.0) : t)
 #define ROUGH_TEMP(t) (t - 90)
 
 #define DATESTAMP_DAY(d) (d & 0x001f)

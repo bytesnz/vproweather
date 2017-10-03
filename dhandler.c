@@ -553,7 +553,7 @@ void PrintRTData(bool includeLoop2Data)
     if (includeLoop2Data) printf("%s = %d\n", _WIND_10M_GUST_DIR, rcd2.windGust10mDir );
     if (includeLoop2Data) printf("%s = %s\n", _WIND_10M_GUST_DIR_ROSE, getWindRose(rcd2.windGust10mDir) );
     printf("%s = %d\n", _OUTSIDE_HUM, rcd.yOutsideHum );
-    printf("%s = %.2f\n", _RAIN_RATE, rcd.wRainRate / 100.0 );
+    printf("%s = %d\n", _RAIN_RATE, rcd.wRainRate );
     printf("%s = %s\n", _IS_RAINING, rcd.wRainRate ? "yes" : "no");
     printf("%s = ", _UV_LEVEL);
     if(rcd.yUVLevel == 0xff)
@@ -568,18 +568,18 @@ void PrintRTData(bool includeLoop2Data)
     if (includeLoop2Data) printf("%s = %d\n", _HEAT_INDEX, rcd2.heatIndex );
     if (includeLoop2Data) printf("%s = %d\n", _WIND_CHILL, rcd2.windChill );
     if (includeLoop2Data) printf("%s = %d\n", _THSW_INDEX, rcd2.thswIndex );
-    printf("%s = %.2f\n", _RAIN_STORM, rcd.wStormRain / 100.0 );
+    printf("%s = %.2f\n", _RAIN_STORM, rcd.wStormRain / 100.0);
     printf("%s = ", _STORM_START_DATE);
     PrintDate(rcd.wStormStart);
     printf("\n");
 
     if (includeLoop2Data) printf("%s = %.2f\n", _RAIN_LAST_15M, rcd2.last15mRain / 100.0);
     if (includeLoop2Data) printf("%s = %.2f\n", _RAIN_LAST_HOUR, rcd2.lastHourRain / 100.0);
-    printf("%s = %.2f\n", _DAY_RAIN, rcd.wRainDay / 100.0);
-    printf("%s = %.2f\n", _MONTH_RAIN, rcd.wRainMonth / 100.0);
-    printf("%s = %.2f\n", _YEAR_RAIN, rcd.wRainYear / 100.0);
-    printf("%s = %d\n", _DAY_ET, rcd.wETDay);
-    printf("%s = %d\n", _MONTH_ET, rcd.wETMonth);
+    printf("%s = %d\n", _DAY_RAIN, rcd.wRainDay);
+    printf("%s = %d\n", _MONTH_RAIN, rcd.wRainMonth);
+    printf("%s = %d\n", _YEAR_RAIN, rcd.wRainYear);
+    printf("%s = %0.3f\n", _DAY_ET, rcd.wETDay / 1000.0);
+    printf("%s = %0.2f\n", _MONTH_ET, rcd.wETMonth / 100.0);
     printf("%st = %d\n", _XMIT_BATT, rcd.yXmitBatt);
     printf("%s = %.1f\n", _BATT_VOLTAGE, ((rcd.wBattLevel * 300)/512)/100.0);
     printf("%s = %d\n", _FORE_ICON, rcd.yForeIcon);
@@ -1503,10 +1503,10 @@ void PrintArchPacket(int maxArcRecords)
     printf("%02d:%02d,", TIMESTAMP_HOUR(record->time), TIMESTAMP_MINUTE(record->time));
 
     // Outside/Inside temperatures
-    PRINTDECIMAL(TEMP(record->outsideTemp), 32767, true);
-    PRINTDECIMAL(TEMP(record->outsideHighTemp), -32767, true);
-    PRINTDECIMAL(TEMP(record->outsideLowTemp), 32767, true);
-    PRINTDECIMAL(TEMP(record->insideTemp), 32767, true);
+    PRINTDECIMAL(DASH_TEMP(record->outsideTemp, 32767), 32767, true);
+    PRINTDECIMAL(DASH_TEMP(record->outsideHighTemp, -32768), -32768, true);
+    PRINTDECIMAL(DASH_TEMP(record->outsideLowTemp, 32767), 32767, true);
+    PRINTDECIMAL(DASH_TEMP(record->insideTemp, 32767), 32767, true);
 
     // Extra temperatures (** dash value incorrectly set to 255 on VP2)
     PRINTINT(record->extraTemps[0], 255, true);
@@ -1539,7 +1539,7 @@ void PrintArchPacket(int maxArcRecords)
 
     // Radiation
     PRINTINT(record->avgSolarRad, 32767, true);
-    PRINTINT(record->solarRadMax, 0, true);
+    PRINTINT(record->solarRadMax, 32676, true);
     PRINTINT(record->avgUvIndex, 255, true);
     PRINTDECIMAL(record->uvMax / 10.0, 0, true);
     PRINTTHOUSANDTHS(record->etAccumulated / 1000.0, 0, true);
