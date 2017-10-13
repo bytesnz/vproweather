@@ -5,7 +5,7 @@ Initial version written by Joe Jaworski (http://www.joejaworski.com/weather/)
 Additions made by Jack Farley (https://github.com/bytesnz/wproweather)
 
 ```
-vproweather v0.8.0
+vproweather v1.3.4
 https://github.com/bytesnz/vproweather
 Original work by Joe Jaworski http://www.joejaworski.com/weather/
 
@@ -237,14 +237,14 @@ grRainByYear = 655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,655.35,65
 ## Archive Data Example Output (with Archive Header)
 ```
 date,time,outside temp (°F),outside temp high (°F), outside temp low (°F),insideTemp (°F),extra temp1 (°F), extra temp2 (°F), extra temp3 (°F),inside humidity (%),outside humidity (%),extra humidity 1 (%),extra humidity 2 (%),rainfall (clicks),highest rain rate (clicks/hr),barometer (inches Hg),forecast at end of period,number of wind samples,average wind speed (mph),prevailing wind direction (°),prevailing wind rose,highest wind speed (mph),highest wind direction (°),higest wind rose,average solar radiation (W/m^2),maximum solar radiation (W/m^2),average uv index,max uv,accumulated et (in),leaf temp 1 (°F),leaf temp 2 (°F),leaf wetness 1,leaf wetness 2,soil temp 1 (°F),soil temp 2 (°F),soil temp 3 (°F),soil temp 4 (°F),soil moisture 1 (cb),soil moisture 2 (cb), soil moisture 3 (cb), soil moisture 4 (cb)
-2017-09-04,19:00,72.9,73.7,72.9,78.2,,,,75,65,,,,,30.155,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1181,11,10,NNW,24,11,NNW,0,,0,,0.003,,,,,,,,,,,,
-2017-09-04,20:00,71.4,72.9,71.4,77.4,,,,70,61,,,,,30.174,Mostly clear with little temperature change.,1220,7,9,NNW,18,10,NNW,0,,0,,0.002,,,,,,,,,,,,
-2017-09-04,21:00,71.8,71.8,71.2,75.2,,,,61,61,,,,,30.191,Mostly clear with little temperature change.,1157,3,9,NNW,12,9,NNW,0,,0,,0.002,,,,,,,,,,,,
-2017-09-04,22:00,71.1,71.9,71.1,74.5,,,,61,59,,,,,30.206,Mostly clear with little temperature change.,1181,3,7,NNW,11,10,NNW,0,,0,,0.002,,,,,,,,,,,,
-2017-09-04,23:00,69.3,71.1,69.3,73.9,,,,62,58,,,,,30.216,Mostly clear with little temperature change.,1184,5,6,NNW,19,8,NNW,0,,0,,0.003,,,,,,,,,,,,
-2017-09-05,00:00,67.1,69.3,67.1,73.4,,,,66,58,,,,,30.210,Partly cloudy with little temperature change.,1191,5,6,NNW,20,6,NNW,0,,0,,0.003,,,,,,,,,,,,
-2017-09-05,01:00,65.4,67.1,65.4,72.7,,,,67,57,,,,,30.197,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1167,6,6,NNW,19,6,NNW,0,,0,,0.003,,,,,,,,,,,,
-2017-09-05,02:00,64.2,65.4,64.2,72.1,,,,67,57,,,,,30.181,Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.,1184,6,6,NNW,19,6,NNW,0,,0,,0.002,,,,,,,,,,,,
-2017-09-05,03:00,64.0,64.2,63.7,71.5,,,,68,57,,,,,30.162,Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.,1160,5,6,NNW,18,6,NNW,0,,0,,0.002,,,,,,,,,,,,
-2017-09-05,04:00,63.2,64.0,63.2,71.0,,,,69,57,,,,,30.156,Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.,1197,4,6,NNW,17,6,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,19:00,72.9,73.7,72.9,78.2,,,,75,65,,,,,30.155,"Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.",1181,11,10,NNW,24,11,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-04,20:00,71.4,72.9,71.4,77.4,,,,70,61,,,,,30.174,"Mostly clear with little temperature change.",1220,7,9,NNW,18,10,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,21:00,71.8,71.8,71.2,75.2,,,,61,61,,,,,30.191,"Mostly clear with little temperature change.",1157,3,9,NNW,12,9,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,22:00,71.1,71.9,71.1,74.5,,,,61,59,,,,,30.206,"Mostly clear with little temperature change.",1181,3,7,NNW,11,10,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-04,23:00,69.3,71.1,69.3,73.9,,,,62,58,,,,,30.216,"Mostly clear with little temperature change.",1184,5,6,NNW,19,8,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,00:00,67.1,69.3,67.1,73.4,,,,66,58,,,,,30.210,"Partly cloudy with little temperature change.",1191,5,6,NNW,20,6,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,01:00,65.4,67.1,65.4,72.7,,,,67,57,,,,,30.197,"Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.",1167,6,6,NNW,19,6,NNW,0,,0,,0.003,,,,,,,,,,,,
+2017-09-05,02:00,64.2,65.4,64.2,72.1,,,,67,57,,,,,30.181,"Increasing clouds with little temperature change. Precipitation possible within 24 to 48 hrs.",1184,6,6,NNW,19,6,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-05,03:00,64.0,64.2,63.7,71.5,,,,68,57,,,,,30.162,"Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.",1160,5,6,NNW,18,6,NNW,0,,0,,0.002,,,,,,,,,,,,
+2017-09-05,04:00,63.2,64.0,63.2,71.0,,,,69,57,,,,,30.156,"Increasing clouds and warmer. Precipitation possible within 12 to 24 hrs. Windy.",1197,4,6,NNW,17,6,NNW,0,,0,,0.002,,,,,,,,,,,,
 ```

@@ -1526,7 +1526,7 @@ void PrintArchPacket(int maxArcRecords)
 
     // Barometer and forecast
     PRINTTHOUSANDTHS(record->barometer / 1000.0, 0, true);
-    printf("%s,", ForecastString(record->forecastRule));
+    printf("\"%s\",", ForecastString(record->forecastRule));
 
     // Wind speed
     PRINTINT(record->windSamples, 0, true);
