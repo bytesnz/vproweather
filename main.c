@@ -41,7 +41,7 @@
 #include "dhandler.h"
 #include "byte.h"
 
-#define VERSION "1.3.4"
+#define VERSION "1.3.5"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
@@ -775,7 +775,7 @@ int runCommand(char* command, int commandLength, int expectedLength, char* dataL
     /* Check received an ACK */
     if (expectingAck) {
         if (szSerBuffer[0] != ACK) {
-          printf("Didn't get ACK from weather station\n");
+          fprintf(stderr, "Didn't get ACK from weather station (got %d bytes)\n", nCnt);
           return -1;
         } else if (bVerbose) {
           printf("Get ACK reply to command\n");
