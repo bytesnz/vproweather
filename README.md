@@ -4,8 +4,12 @@ Initial version written by Joe Jaworski (http://www.joejaworski.com/weather/)
 
 Additions made by Jack Farley (https://github.com/bytesnz/wproweather)
 
+Contributors:
+- [Andrew Miskelly (amiskelly)](https://github.com/amiskelly)
+
+## Usage
 ```
-vproweather v1.3.5
+vproweather v1.3.6
 https://github.com/bytesnz/vproweather
 Original work by Joe Jaworski http://www.joejaworski.com/weather/
 

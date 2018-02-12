@@ -41,7 +41,7 @@
 #include "dhandler.h"
 #include "byte.h"
 
-#define VERSION "1.3.5"
+#define VERSION "1.3.6"
 
 /* local Data */
 static char szttyDevice[255];           /* Serial device string */
