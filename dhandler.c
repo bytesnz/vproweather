@@ -1445,7 +1445,7 @@ void PrintArchHeader(void)
   printf("outside temp (°F),outside temp high (°F), outside temp low (°F),insideTemp (°F),");
   printf("extra temp1 (°F), extra temp2 (°F), extra temp3 (°F),");
   // Humidity
-  printf("inside humidity (%%),outside humidity (%%),");
+  printf("outside humidity (%%),inside humidity (%%),");
   printf("extra humidity 1 (%%),extra humidity 2 (%%),");
   // Rainfall
   printf("rainfall (clicks),highest rain rate (clicks/hr),");
