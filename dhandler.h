@@ -338,7 +338,7 @@ typedef struct t_RTDATA2
     uint16_t unused3;        /* 26 Unused, filled with 0x7FFF                */
     uint16_t unused4;        /* 28 Unused, filled with 0x7FFF                */
     int16_t  dewPoint;       /* 30 Signed two byte value to the whole DegF   */
-    uint16_t unused5;        /* 32 Unused, filled with 0x7FFF                */
+    uint8_t  unused5;        /* 32 Unused, filled with 0xFF                  */
     uint8_t  outsideHum;     /* 33 Outside humidity in %                     */
     uint8_t  unused6;        /* 34 Unused, filled with 0xFF                  */
     int16_t  heatIndex;      /* 35 Heat index in DegF                        */
